@@ -57,6 +57,9 @@ typedef enum {
     BOOL autoFocus, isKeyboardShow;
     NSString *sendBtnBgStr, *sendBtnAcStr, *sendBtnTitle, *sendBtnTitleColor;
     float sendBtnTilteSize;
+    
+    //private
+    float intervalePop;
 }
 
 @property (nonatomic, strong) NSString *placeholderStr;
@@ -158,6 +161,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 #pragma mark-
 
 - (void)open:(NSDictionary *)paramDict_{
+    intervalePop = [paramDict_ floatValueForKey:@"delay" defaultValue:intervalePop];
     if (_chatBgView) {
         [[_chatBgView superview] bringSubviewToFront:_chatBgView];
         _chatBgView.hidden = NO;
@@ -548,7 +552,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         return;
     }
     NSInteger cbid = [parmasDict_ integerValueForKey:@"cbId" defaultValue:-1];
-    _timer = [NSTimer scheduledTimerWithTimeInterval:0.4 target:self selector:@selector(hideKeyborad) userInfo:nil repeats:NO];
+    _timer = [NSTimer scheduledTimerWithTimeInterval:intervalePop target:self selector:@selector(hideKeyborad) userInfo:nil repeats:NO];
     if (cbid!=-1) {
         [self sendResultEventWithCallbackId:cbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"status"] errDict:nil doDelete:YES];
     }
