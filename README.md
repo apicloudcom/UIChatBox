@@ -102,7 +102,7 @@ emotionPath：
 
 - `.json`配置文件所在目录：
 
-![emotionPath](/img/emotionPath.png)
+![emotionPath](https://docs.apicloud.com/img/emotionPath.png)
 
 texts：
 
