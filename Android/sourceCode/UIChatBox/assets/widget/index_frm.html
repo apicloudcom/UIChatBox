@@ -1,0 +1,438 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, initial-scale=1.0, width=device-width"/>
+    <meta name="format-detection" content="telephone=no, email=no, date=no, address=no">
+    <title>WinA</title>
+    <link rel="stylesheet" type="text/css" href="css/api.css" />
+    <link rel="stylesheet" type="text/css" href="css/box.css" />
+    <script type="text/javascript" src="script/public.js"></script>
+    <style>
+    	p{
+    		color:#999;
+    		padding:5px;
+    	}
+    </style>
+	<script type="text/javascript">
+	    function openView(){
+			var obj = api.require('UIChatBox');
+			obj.open({
+			    //输入框占位提示文本；
+				placeholder: '',
+				//文本显示的行数;
+			    maxRows: 3,
+			    //输入框是否自动获取焦点，并弹出键盘
+			    autoFocus:true,
+			    //  自定义表情文件夹
+			    emotionPath: 'widget://emotion',
+			    texts: {
+			   
+			        recordBtn: {
+			         //录音显示的文字；  
+			            normalTitle: '按住说话',
+			            activeTitle: '松开结束'
+			        },   
+			        sendBtn:{
+			         //发送文字显示的文字；
+			         	title : '发送',
+                        titleColor: '#fff',
+                        bg: '#e27b01',
+                        activeBg: '#e27b01',
+                        titleSize: 12
+			        }
+			    },
+			    styles: {
+			        inputBar: {
+			            borderColor: '#d9d9d9',
+			            bgColor: '#f2f2f2'
+			        },
+			        inputBox: {
+			            borderColor: '#B3B3B3',
+			            bgColor: '#00FF00'
+			        },
+			        //JSON对象；表情按钮样式；不传则不显示表情按钮
+                    //字符串类型；表情按钮常态的背景图片（本地路径，fs://、widget://）；默认：笑脸小图标
+			        emotionBtn: { 
+			        
+			          //表情按钮样式；不传则不显示表情按钮                  
+			          normalImg: 'widget://res/2.png',//  字符串类型；表情按钮常态的背景图片（本地路径，fs://，widget://）；默认：笑脸小图标
+        			},
+        			
+        			
+        			
+        			//这是额外功能按钮传入的参数；
+			        //extrasBtn: {                           //（可选项）JSON对象；附加功能按钮样式，不传则不显示附加功能按钮
+			           // normalImg: 'widget://res/1.png',         //（可选项）字符串类型；附加功能按钮常态的背景图片（本地路径，fs://，widget://）
+			           // activeImg: 'widget://res/hu.png'          //（可选项）字符串类型；附加功能按钮按下时的背景图片（本地路径，fs://，widget://）
+			      	//},
+			      	
+			       	
+			       	
+			       	//键盘按钮样式
+				   // keyboardBtn: {                      //JSON对象；键盘按钮样式
+				          //  normalImg: 'widget://res/1.png',         //字符串类型；键盘按钮常态的背景图片（本地路径，fs://，widget://）；默认：键盘小图标
+				           //字符串类型；键盘按钮按下时的背景图片（本地路径，fs://，widget://）
+				       //},
+				       
+				       
+				       
+				       
+				       
+						//输入框左侧按钮样式，不传则不显示左边的语音按钮
+				      speechBtn: {                         //（可选项）JSON对象；输入框左侧按钮样式，不传则不显示左边的语音按钮
+				            //输入框左侧的那张图片,也就是占位图,未点击的时候；
+				            normalImg: 'widget://image/chatBox_album1.png',    
+				           //字符串类型；左侧按钮按下的背景图片（本地路径，fs://，widget://）     
+				      },
+				      
+				      
+				      
+				      
+				      
+				      
+				      
+				      //“按住 录音”按钮的样式
+			        recordBtn: {
+			             normalBg: '#c4c4c4',
+                         activeBg: '#999999',
+                         color: '#000',
+                         size: 14
+			        },
+			        
+			        
+			        
+			        indicator: {
+			            target: 'both',
+			            color: '#c4c4c4',
+			            activeColor: '#9e9e9e'
+			        }
+			    },
+			    extras: {
+			        titleSize: 10,
+			        titleColor: '#a3a3a3',
+			        btns : [{
+						title : '照片',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '拍照',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '小视频',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '位置',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '收藏',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '个人名片',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '语音输入',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '红包',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}, {
+						title : '视频聊天',
+						normalImg : 'widget://image/chatBox_album2.png',
+						activeImg : 'widget://image/chatBox_album2.png'
+					}]
+			        
+			    }
+			}, function(ret){
+				//popupKeyboard();
+				//addLis();
+				//addLisChange();
+				alert(JSON.stringify(ret));
+				//addLisPress();
+				
+				setTimeout("closeKeyboard()",3000);
+			});
+		}
+		
+		
+		//输入框内容改变事件value: ''//字符串类型；输入框当前内容，仅当 target 为 inputBar name 为 valueChanged 时有值
+		
+		//输入框所在区域弹动事件
+	   //  function addLis(){
+		//	var obj = api.require('UIChatBox');
+		//	obj.addEventListener({
+		//		target: 'inputBar',
+		//		name: 'move'
+		//	}, function(ret,err){
+			
+		//		alert("keyboard"+JSON.stringify(ret));
+		//	});
+		//}
+		
+		
+		
+		function addLis(){
+			var obj = api.require('UIChatBox');
+			 obj.addEventListener({
+        target : 'inputBar',
+        name : 'move'
+    }, function(ret, err) {
+        var _h = ret.inputBarHeight + ret.panelHeight;
+        var h = api.winHeight - 70 - _h;
+       // alert("h"+h +"api.winHeight"+api.winHeight);
+     
+       //console.log("api.winHeight=" + api.winHeight + " inputBar=" + JSON.stringify(ret) + " h=" + h);
+		alert("keyboard11"+JSON.stringify(ret));
+       api.setFrameAttr({
+            name : 'chat_frm',
+            rect : {
+                x : 0,
+                y : 70,
+                w : 'auto',
+                h : h        //动态设置chat_frm的高度
+            }
+        });
+
+    });
+		}
+		
+		
+		
+		
+		//（输入框所在区域高度改变）这个时候走了
+		
+		function addLisChange(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'inputBar',
+				name: 'change'
+			}, function(ret,err){
+				alert("edit"+JSON.stringify(ret));
+			});
+		}
+		//监听valueChanged；
+		function add_Elv(){
+		 alert(999);
+		    var UIChatBox = api.require('UIChatBox');
+			UIChatBox.addEventListener({
+				target : 'inputBar',
+				name : 'valueChanged'
+			}, function(ret, err) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+					//console.log(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		}
+		
+		
+		function insertMsg(){
+			var obj = api.require('UIChatBox');
+			obj.insertValue({
+				index: 10,
+				msg: '这里是插入的字符串[微笑]哈哈'
+			});
+		}
+		
+		function addLisPress(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'recordBtn',
+				name: 'press'
+			}, function(ret,err){
+				alert("press");
+			});
+		}
+		
+		function addLisPressCancel(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'recordBtn',
+				name: 'press_cancel'
+			}, function(ret,err){
+				alert("press_cancel");
+			});
+		}
+		
+		function addLisMoveOut(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'recordBtn',
+				name: 'move_out'
+			}, function(ret,err){
+				alert("move_out");
+			});
+		}
+		
+		function addLisMoveOutCancel(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'recordBtn',
+				name: 'move_out_cancel'
+			}, function(ret,err){
+			   alert("move_out_cancel");
+			});
+		}
+		
+		function addLisMoveIn(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'recordBtn',
+				name: 'move_in'
+			}, function(ret,err){
+				alert("move_in");
+			});
+		}
+		
+		function addLisShowRecord(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'inputBar',
+				name: 'showRecord'
+			}, function(ret,err){
+				alert("showRecord");
+			});
+		}
+		
+		function addLisShowEmotion(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'inputBar',
+				name: 'showEmotion'
+			}, function(ret,err){
+			   alert("showEmotion");
+			});
+		}
+		
+		function addLisShowExtras(){
+			var obj = api.require('UIChatBox');
+			obj.addEventListener({
+				target: 'inputBar',
+				name: 'showExtras'
+			}, function(ret,err){
+				alert("showExtras");
+			});
+		}
+		
+		function popupKeyboard(){
+			var obj = api.require('UIChatBox');
+			obj.popupKeyboard({
+			});
+		}
+		
+		function closeKeyboard(){
+			var obj = api.require('UIChatBox');
+			obj.closeKeyboard({
+			});
+		}
+		
+		function valueNull(){
+			var obj = api.require('UIChatBox');
+			obj.value({
+			}, function(ret,err){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
+		function valueHH(){
+			var obj = api.require('UIChatBox');
+			obj.value({
+				msg: '这里是插入的字符串 [微笑] 哈哈'
+			}, function(ret,err){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
+		function valueSpace(){
+			var obj = api.require('UIChatBox');
+			obj.value({
+				msg: ''
+			}, function(ret,err){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
+		function closeChat(){
+			var obj = api.require('UIChatBox');
+			obj.close();
+		}
+		
+		function reloadExtraBoard(){
+			var obj = api.require('UIChatBox');
+			obj.reloadExtraBoard({
+				extras: {
+						titleSize: 5,
+						titleColor: '#00FF00',
+						btns : [{
+							title : '照片+',
+							normalImg : 'widget://image/chatBox_album2.png',
+							activeImg : 'widget://image/chatBox_album2.png'
+						}, {
+							title : '拍照+',
+							normalImg : 'widget://image/chatBox_album2.png',
+							activeImg : 'widget://image/chatBox_album2.png'
+						}, {
+							title : '小视频+',
+							normalImg : 'widget://image/chatBox_album2.png',
+							activeImg : 'widget://image/chatBox_album2.png'
+						}, {
+							title : '位置+',
+							normalImg : 'widget://image/chatBox_album2.png',
+							activeImg : 'widget://image/chatBox_album2.png'
+						}, {
+							title : '收藏+',
+							normalImg : 'widget://image/chatBox_album2.png',
+							activeImg : 'widget://image/chatBox_album2.png'
+						}]
+					}
+					}
+			);
+		}
+	    
+	</script>
+</head>
+<body>
+    <div id="wrap">
+        <div id="main">
+				<div>
+
+            	<input type="button" onclick="openView()" value="openView" />
+            	<input type="button" onclick="reloadExtraBoard()" value="reloadExtraBoard" />
+            	<input type="button" onclick="addLis()" value="addLis" />
+            	<input type="button" onclick="addLisChange()" value="addLisChange" />
+            	<input type="button" onclick="add_Elv()" value="监听intputBar_valuechange" />
+            	
+            	<input type="button" onclick="addLisPress()" value="addLisPress" />
+            	<input type="button" onclick="addLisPressCancel()" value="addLisPressCancel" />
+            	<input type="button" onclick="addLisMoveOut()" value="addLisMoveOut" />
+            	<input type="button" onclick="addLisMoveOutCancel()" value="addLisMoveOutCancel" />
+            	<input type="button" onclick="addLisMoveIn()" value="addLisMoveIn" />
+            	
+            	<input type="button" onclick="addLisShowRecord()" value="addLisShowRecord" />
+            	<input type="button" onclick="addLisShowEmotion()" value="addLisShowEmotion" />
+            	<input type="button" onclick="addLisShowExtras()" value="addLisShowExtras" />
+            	
+            	<input type="button" onclick="insertMsg()" value="insertMsg" />
+            	
+            	<input type="button" onclick="popupKeyboard()" value="popupKeyboard" />
+            	<input type="button" onclick="closeKeyboard()" value="closeKeyboard" />
+            	
+            	<input type="button" onclick="valueNull()" value="valueNull" />
+            	<input type="button" onclick="valueHH()" value="valueHH" />
+            	<input type="button" onclick="valueSpace()" value="valueSpace" />
+            	
+            	<input type="button" onclick="closeChat()" value="closeChat" />
+            </div>
+		</div>
+	</div>
+</body>
+</html>

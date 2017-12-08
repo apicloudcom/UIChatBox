@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
 
-    <string name="app_name">APICloudSDKDemo</string>
-    <string name="back">返回</string>
-    <string name="confirm">确定</string>
-    <string name="cancel">取消</string>
-    <string name="prompt">提示</string>
-    <string name="complete">完成</string>
-    <string name="exit">退出</string>
-    <string name="browser_exitdialog_app_text">确定要退出程序吗？</string>
-    <string name="browser_exitdialog_msg">退出提示</string>
-    <string name="browser_dialog_error">错误提示</string>
-    <string name="browser_init_error">程序不完整</string>
+    <string name="app_name">UIChatBox</string>
+
 </resources>

@@ -1,47 +1,36 @@
-<!doctype html>
-<html >
+<!DOCTYPE HTML>
+<html>
 <head>
-	<meta charset="UTF-8">
-	<meta name="view-port" content="width=device-width,height=device-height,initial-scale=1.0,user-scalable=0">
-	<title>APICloud</title>
-	<link rel="stylesheet" type="text/css" href="./css/base.css" />
-    <link rel="stylesheet" type="text/css" href="./css/common.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, initial-scale=1.0, width=device-width"/>
+    <meta name="format-detection" content="telephone=no, email=no, date=no, address=no">
+    <title>WinC</title>
+    <link rel="stylesheet" type="text/css" href="css/api.css" />
+    <link rel="stylesheet" type="text/css" href="css/box.css" />
+    <script type="text/javascript" src="script/public.js"></script>
+    <style>
+    	p{
+    		color:#999;
+    		padding:5px;
+    	}
+    </style>
+	<script type="text/javascript">
+	    apiready = function(){
+			fixStatusBar();//沉浸式效果，支持IOS7及Android4.4及以上
+			openContent('index_frm.html', 'index_frm');//打开主frame
+			$('year').innerHTML = new Date().getFullYear();
+	    };
+	</script>
 </head>
 <body>
     <div id="wrap">
-        <div id="header">
-            <h1>APICloud SDK Demo</h1>
+        <div id='header'>
+            <h1>模块开发实例</h1>
         </div>
-        <div id="main">
-                
-        </div>
+        <div id="main"></div>
         <div id="footer">
-            <h5>©2014</h5>
+            <h5>APICloud Copyright &copy;<span id="year"></span> </h5>
         </div>
     </div>
-    
 </body>
-<script type="text/javascript" src="./script/api.js"></script>
-<script type="text/javascript">
-    apiready = function(){
-
-        var header = $api.byId('header');
-        var bodyHeight = window.innerHeight;
-        var offset = $api.offset(header);
-        var footer = $api.byId('footer');
-        var fPos = $api.offset(footer);
-        api.openFrame({
-            name: 'main-con',
-            url: './html/main-con-uichat.html',
-            bounces: true,
-            rect: {
-                x: offset.l,
-                y: offset.t + offset.h,
-                w: offset.w,
-                h: bodyHeight - offset.h - fPos.h
-            }
-        });
-       
-    }
-</script>
 </html>

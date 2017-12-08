@@ -21,7 +21,7 @@
 #define TagEmotionBoard 999
 #define TagExtraBoard 1000
 #define TagExtraBtn 998
-
+#define iPhoneX ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(1125, 2436), [[UIScreen mainScreen] currentMode].size) : NO)
 typedef enum {
     both = 0,
     emotionBoard,
@@ -78,7 +78,10 @@ typedef enum {
 @property (nonatomic, assign) float currentChatViewHeight;
 @property (nonatomic, strong) NSDictionary *sendBtnInfo;
 @property (nonatomic, strong) NSDictionary *recordBtnInfo;
-@property (nonatomic, strong) UIView *recordBtn;
+@property (nonatomic, strong) UZUIChatBoxBtnView *recordBtn;
+@property (nonatomic, assign) BOOL showFaceBtn;
+
+@property (nonatomic, assign) CGFloat chatH;
 
 @end
 
@@ -140,7 +143,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                 [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
             }
             CGRect rect = btnSuperView.frame;
-            rect.origin.y = _chatBgView.bounds.size.height - 50;
+            rect.origin.y = _chatBgView.bounds.size.height - self.chatH;
             [UIView beginAnimations:nil context:nil];
             [UIView setAnimationDuration:0.3];
             btnSuperView.frame = rect;
@@ -231,7 +234,12 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [superWebView.scrollView addGestureRecognizer:singleTap];
     //输入框背景承载视图
     _chatBgView = [[UIView alloc]init];
-    _chatBgView.frame = CGRectMake(0, _mainScreenHeight-50, _mainScreenWidth, 50);
+    if (iPhoneX) {
+        self.chatH = 84;
+    }else{
+        self.chatH = 50;
+    }
+    _chatBgView.frame = CGRectMake(0, _mainScreenHeight-self.chatH, _mainScreenWidth, self.chatH);
     self.currentInputfeildHeight = _chatBgView.frame.size.height;
     self.currentChatViewHeight = _mainScreenHeight - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
     NSDictionary *inputBarStyle = [styles dictValueForKey:@"inputBar" defaultValue:@{}];
@@ -257,7 +265,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     cutLineUp.backgroundColor = [UZAppUtils colorFromNSString:barBoardColor];
     [_chatBgView addSubview:cutLineUp];
     //下分割线
-    UIView *cutLineDown = [[UIView alloc]initWithFrame:CGRectMake(0, _chatBgView.frame.size.height-1, _mainScreenWidth, 1)];
+    UIView *cutLineDown = [[UIView alloc]initWithFrame:CGRectMake(0, 50-1, _mainScreenWidth, 1)];
     cutLineDown.backgroundColor = [UZAppUtils colorFromNSString:barBoardColor];
     cutLineDown.tag = TagCutLineDown;
     [_chatBgView addSubview:cutLineDown];
@@ -282,10 +290,16 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
     //表情按钮的图片读取
     NSDictionary *emotionBtnInfo = [styles dictValueForKey:@"emotionBtn" defaultValue:@{}];
+    if (emotionBtnInfo && [emotionBtnInfo isKindOfClass:[NSDictionary class]]) {
+        self.showFaceBtn = YES;
+    }
     NSString *emotionImgDefault = [[NSBundle mainBundle]pathForResource:@"res_UIChatBox/face" ofType:@"png"];
     NSString *emotionimg1 =  [emotionBtnInfo stringValueForKey:@"normalImg" defaultValue:emotionImgDefault];
     if ([emotionimg1 isKindOfClass:[NSString class]] && emotionimg1.length>0) {
         self.emotionNormalImg = [self getPathWithUZSchemeURL:emotionimg1];
+        if (![[NSFileManager defaultManager]fileExistsAtPath:self.emotionNormalImg isDirectory:nil]) {
+            self.emotionNormalImg = emotionImgDefault;
+        }
     }
     NSString *emotionimg2 =  [emotionBtnInfo stringValueForKey:@"activeImg" defaultValue:nil];
     if ([emotionimg2 isKindOfClass:[NSString class]] && emotionimg2.length>0) {
@@ -336,6 +350,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (extrasBtnStyle == nil) {
         textXW += 40;
     }
+    if (!self.showFaceBtn) {
+        textXW += 40;
+    }
     autoFocus = [paramDict_ boolValueForKey:@"autoFocus" defaultValue:NO];
     _textView = [[UZUIChatBoxTextView alloc] initWithFrame:CGRectMake(textX, 10, textXW, 32)];
     _textView.delegate = self;
@@ -366,8 +383,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         _recordBtn.hidden = YES;
         _recordBtn.delegate = self;
         [_chatBgView addSubview:_recordBtn];
-        NSRange rang = [recordNormal rangeOfString:@"://"];
-        if (rang.location == NSNotFound) {
+        if ([UZAppUtils isValidColor:recordNormal]) {
             UIView *recordbg = [[UIView alloc]initWithFrame:_recordBtn.bounds];
             recordbg.backgroundColor = [UZAppUtils colorFromNSString:recordNormal];
             recordbg.tag = TagRecordBtn;
@@ -398,28 +414,32 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         _textView.placeholder.text = _placeholderStr;
     }
     //表情按钮
-    UIButton *emotionKeyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    if (extrasBtnStyle) {
-        emotionKeyBtn.frame = CGRectMake(_mainScreenWidth-18-60,10, 30, 30);
-    } else {
-        emotionKeyBtn.frame = CGRectMake(_mainScreenWidth-9-29, 10, 30, 30);
+    if (self.showFaceBtn) {
+        UIButton *emotionKeyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        if (extrasBtnStyle) {
+            emotionKeyBtn.frame = CGRectMake(_mainScreenWidth-18-60,10, 30, 30);
+        } else {
+            emotionKeyBtn.frame = CGRectMake(_mainScreenWidth-9-29, 10, 30, 30);
+        }
+        emotionKeyBtn.tag = TagEmotionBtn;
+        UIImage *emotionImg = [UIImage imageWithContentsOfFile:emotionNormalImg];
+        UIImage *emotionImgHigh = [UIImage imageWithContentsOfFile:emotionHighImg];
+        [emotionKeyBtn setBackgroundImage:emotionImg forState:UIControlStateNormal];
+        [emotionKeyBtn setBackgroundImage:emotionImgHigh forState:UIControlStateHighlighted];
+        [emotionKeyBtn addTarget:self action:@selector(emotionBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [btnSuperView addSubview:emotionKeyBtn];
     }
-    emotionKeyBtn.tag = TagEmotionBtn;
-    UIImage *emotionImg = [UIImage imageWithContentsOfFile:emotionNormalImg];
-    UIImage *emotionImgHigh = [UIImage imageWithContentsOfFile:emotionHighImg];
-    [emotionKeyBtn setBackgroundImage:emotionImg forState:UIControlStateNormal];
-    [emotionKeyBtn setBackgroundImage:emotionImgHigh forState:UIControlStateHighlighted];
-    [emotionKeyBtn addTarget:self action:@selector(emotionBtnClick:) forControlEvents:UIControlEventTouchUpInside];
-    [btnSuperView addSubview:emotionKeyBtn];
     //滚动缩回键盘
     [self setWebViewScrollDelegate:self];
     //读取表情文件
-    NSString *sourcePath = [paramDict_ stringValueForKey:@"emotionPath" defaultValue:nil];
-    if (![sourcePath isKindOfClass:[NSString class]] || sourcePath.length<=0) {
-        return;
+    if (self.showFaceBtn) {
+        NSString *sourcePath = [paramDict_ stringValueForKey:@"emotionPath" defaultValue:nil];
+        if (![sourcePath isKindOfClass:[NSString class]] || sourcePath.length<=0) {
+            return;
+        }
+        emotionBtnState = 0;
+        [NSThread detachNewThreadSelector:@selector(loadEmotionSource:) toTarget:self withObject:sourcePath];
     }
-    emotionBtnState = 0;
-    [NSThread detachNewThreadSelector:@selector(loadEmotionSource:) toTarget:self withObject:sourcePath];
 }
 
 - (void)close:(NSDictionary *)paramsDict_ {
@@ -806,6 +826,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         //将左边按钮置为当前按钮高亮图标
         //隐藏录音按钮
         _recordBtn.hidden = YES;
+        _textView.hidden = NO;
         [_textView becomeFirstResponder];
         [self textViewDidChange:_textView];
     } else {
@@ -834,13 +855,14 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [btn setImage:[UIImage imageWithContentsOfFile:keyHighImg] forState:UIControlStateHighlighted];
         //显示录音按钮
         _recordBtn.hidden = NO;
+        _textView.hidden = YES;
         //将输入框大小打回原形
         CGRect textTemp = _textView.frame;
         textTemp.size.height =32;
         _textView.frame = textTemp;
         CGRect textBoardTemp = _chatBgView.frame;
-        if(textBoardTemp.size.height>50){
-            float changeY = textBoardTemp.size.height-50;
+        if(textBoardTemp.size.height>self.chatH){
+            float changeY = textBoardTemp.size.height-self.chatH;
             textBoardTemp.origin.y += changeY;
             textBoardTemp.size.height -= changeY;
             _chatBgView.frame = textBoardTemp;
@@ -875,6 +897,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     tempSpeechBtn.selected = NO;
     //隐藏录音按钮
     _recordBtn.hidden = YES;
+    _textView.hidden = NO;
     if (emotionBtnState == 0) {//表情状态
         //关闭键盘
         //[self keyboardWillHide:nil];
@@ -889,7 +912,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [self.viewController.view bringSubviewToFront:_emotionView];
         //输入框移动
         CGRect inputRect = _chatBgView.frame;
-        inputRect.origin.y = motionRect.origin.y-inputRect.size.height;
+        NSLog(@"--------%lf",inputRect.size.height);
+        inputRect.origin.y = motionRect.origin.y-50;
+        
         //动画
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationBeginsFromCurrentState:YES];
@@ -942,6 +967,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     tempSpeechBtn.selected = NO;
     //隐藏录音按钮
     _recordBtn.hidden = YES;
+    _textView.hidden = NO;
     //关闭键盘
     //[self keyboardWillHide:nil];
     [_textView resignFirstResponder];
@@ -955,7 +981,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [self.viewController.view bringSubviewToFront:_extrasBoard];
     //输入框移动
     CGRect inputRect = _chatBgView.frame;
-    inputRect.origin.y = motionRect.origin.y-inputRect.size.height;
+//    inputRect.origin.y = motionRect.origin.y-inputRect.size.height;
+    inputRect.origin.y = motionRect.origin.y-50;
     //动画
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:YES];
@@ -1065,7 +1092,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [_emotionView addSubview:emotionSource];
     [emotionSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumEmo, 216)];
     //添加页面控制器
-    self.pageControl = [[UIPageControl alloc]initWithFrame:CGRectMake(50,216-30,126,20)];
+    self.pageControl = [[UIPageControl alloc]initWithFrame:CGRectMake(self.chatH,216-30,126,20)];
     if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
         [pageControl setCurrentPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgActiveColor]];
         [pageControl setPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgColor]];
@@ -1120,10 +1147,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                 if (the>=self.sourceAry.count) {
                     //添加消除按钮
                     UIButton *cancelBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                    cancelBtn.frame = CGRectMake(_mainScreenWidth-(40+verInterval)+(_mainScreenWidth*i), 134, 40, 40);
+                    cancelBtn.frame = CGRectMake(_mainScreenWidth-(30+verInterval)+(_mainScreenWidth*i), 139, 30, 30);
                     NSString *img = [NSString stringWithFormat:@"%@/delete.png",path];
                     NSString *realImg = [self getPathWithUZSchemeURL:img];
-                    [cancelBtn setImage:[UIImage imageWithContentsOfFile:realImg] forState:UIControlStateNormal];
+                    [cancelBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realImg] forState:UIControlStateNormal];
                     [cancelBtn addTarget:self action:@selector(cancel:) forControlEvents:UIControlEventTouchUpInside];
                     [emotionSource addSubview:cancelBtn];
                     [self sendResultEventWithCallbackId:openCbID dataDict:[NSDictionary dictionaryWithObject:@"show" forKey:@"eventType"] errDict:nil doDelete:NO];
@@ -1132,10 +1159,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                 if (j==3 && g==btnNum-1) {
                     //添加消除按钮
                     UIButton *cancelBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                    cancelBtn.frame = CGRectMake(_mainScreenWidth-(40+verInterval)+(_mainScreenWidth*i), 134, 40, 40);
+                    cancelBtn.frame = CGRectMake(_mainScreenWidth-(30+verInterval)+(_mainScreenWidth*i), 139, 30, 30);
                     NSString *img = [NSString stringWithFormat:@"%@/delete.png",path];
                     NSString *realImg = [self getPathWithUZSchemeURL:img];
-                    [cancelBtn setImage:[UIImage imageWithContentsOfFile:realImg] forState:UIControlStateNormal];
+                    [cancelBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realImg] forState:UIControlStateNormal];
                     [cancelBtn addTarget:self action:@selector(cancel:) forControlEvents:UIControlEventTouchUpInside];
                     [emotionSource addSubview:cancelBtn];
                 } else {
@@ -1309,7 +1336,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     int height = keyboardRect.size.height;
     
     CGRect  tempFrame = _chatBgView.frame;
-    tempFrame.origin.y = _mainScreenHeight - height - _chatBgView.frame.size.height;
+//    tempFrame.origin.y = _mainScreenHeight - height - _chatBgView.frame.size.height;
+       tempFrame.origin.y = _mainScreenHeight - height - 50;
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:YES];
     [UIView setAnimationDuration:0.3];
@@ -1373,14 +1401,14 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     textTemp.size.height = 32;
     _textView.frame = textTemp;
     CGRect textBoardTemp = _chatBgView.frame;
-    if(textBoardTemp.size.height>50){
-        float changeY = textBoardTemp.size.height-50;
+    if(textBoardTemp.size.height>self.chatH){
+        float changeY = textBoardTemp.size.height-self.chatH;
         textBoardTemp.origin.y += changeY;
         textBoardTemp.size.height -= changeY;
         _chatBgView.frame = textBoardTemp;
         
         CGRect rect = btnSuperView.frame;
-        rect.origin.y = _chatBgView.bounds.size.height - 50;
+        rect.origin.y = _chatBgView.bounds.size.height - self.chatH;
         btnSuperView.frame = rect;
         self.currentInputfeildHeight = _chatBgView.frame.size.height;
         self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
@@ -1496,15 +1524,20 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
     CGSize constraint = CGSizeMake(textView.contentSize.width - fPadding, CGFLOAT_MAX);
     CGSize sizeFrame = [textView.text sizeWithFont:textView.font constrainedToSize:constraint lineBreakMode:NSLineBreakByWordWrapping];//计算当前文本的frame
     float height = sizeFrame.height + 8.0;// 加上文字和上下边框的间隙大小
-    if (height > _maxHeight) {//大于最大值则不改变输入框大小
+    CGRect beforTextRect = textView.frame;
+    BOOL isSmal = beforTextRect.size.height >= _maxHeight;//当前输入框高度小于最大值
+    if (height>_maxHeight && isSmal) {//大于最大值且当前输入框小则不改变输入框大小
         if (height > 32) {//29.**;32 一行文字时的高度
             if (_maxHeight == 32) {
-                [textView setContentOffset:CGPointMake(0, height-textView.frame.size.height+10.0) animated:NO];
+                //[textView setContentOffset:CGPointMake(0, height-textView.frame.size.height+10.0) animated:NO];
                 return;
             }
-            [textView setContentOffset:CGPointMake(0, height-textView.frame.size.height+5.0) animated:NO];
+            //[textView setContentOffset:CGPointMake(0, height-textView.frame.size.height+5.0) animated:NO];
         }//间隙正常
         return;
+    }
+    if (height > _maxHeight) {
+        height = _maxHeight;
     }
     UIView *line = [_chatBgView viewWithTag:TagCutLineDown];//下分割线
     CGRect lineRect = line.frame;
@@ -1519,7 +1552,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         float x = _chatBgView.frame.origin.x;
         float y = _chatBgView.frame.origin.y;
         float w = _chatBgView.frame.size.width;
-        float h = 50 + changeHeight;
+        float h = self.chatH + changeHeight;
         float changeY;
         if (h == _chatBgView.frame.size.height) {
          //保留使用
@@ -1535,17 +1568,17 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
             _chatBgView.frame = CGRectMake(x, y, w, h);
         } completion:^(BOOL finish){
             //调整内容文本上下间隙
-            CGSize textContentSize = textView.contentSize;
-            if (textContentSize.height > newRect.size.height) {
-                textContentSize.height = newRect.size.height;
-            }
-            textView.contentSize = textContentSize;
-            UIEdgeInsets textContentInset = textView.contentInset;
-            textContentInset.top = -4;
-            textView.contentInset = textContentInset;
-            CGPoint offset = textView.contentOffset;
-            offset.y = 4;
-            textView.contentOffset = offset;
+//            CGSize textContentSize = textView.contentSize;
+//            if (textContentSize.height > newRect.size.height) {
+//                textContentSize.height = newRect.size.height;
+//            }
+//            textView.contentSize = textContentSize;
+//            UIEdgeInsets textContentInset = textView.contentInset;
+//            textContentInset.top = -4;
+//            textView.contentInset = textContentInset;
+//            CGPoint offset = textView.contentOffset;
+//            offset.y = 4;
+//            textView.contentOffset = offset;
             //NSLog(@"Animation---contentSize.height:%f",textView.contentSize.height);
             //NSLog(@"Animation---textView.contentInset.top:%f",textView.contentInset.top);
             //NSLog(@"Animation---contentOffset.y:%f",textView.contentOffset.y);
@@ -1563,11 +1596,11 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         newTextRect.size.height = height;
         //重置输入框背景主板的大小和位置
         float h = _chatBgView.frame.size.height;
-        if (h > 50) {
+        if (h > self.chatH) {
             float x = _chatBgView.frame.origin.x;
-            float y = _chatBgView.frame.origin.y + (h - 50);
+            float y = _chatBgView.frame.origin.y + (h - self.chatH);
             float w = _chatBgView.frame.size.width;
-            h = 50;
+            h = self.chatH;
             [UIView beginAnimations:nil context:nil];
             [UIView setAnimationDuration:0.3];
             textView.frame = newTextRect;
