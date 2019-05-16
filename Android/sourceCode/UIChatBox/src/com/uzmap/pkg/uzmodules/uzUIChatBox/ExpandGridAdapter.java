@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -29,8 +36,10 @@ public class ExpandGridAdapter extends BaseAdapter {
 	private UzUIChatBox mModule;
 	private int mTitleSize;
 	private int mTitleColor;
+
 	/****
 	 * 每一个表情点击的适配器;
+	 * 
 	 * @param module
 	 * @param mExpandData
 	 * @param mContext

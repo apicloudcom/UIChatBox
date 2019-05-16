@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -26,11 +33,12 @@ public class FacePagerAdapter extends PagerAdapter {
 	private int mBgColor;
 
 	public FacePagerAdapter(Context mContext, ArrayList<String> mEmotions,
-			BitmapUtils mBitmapUtils, KeyClickListener listener,int bgColor) {
+			BitmapUtils mBitmapUtils, KeyClickListener listener, int bgColor) {
 		this.mEmotions = mEmotions;
 		this.mContext = mContext;
 		this.mBitmapUtils = mBitmapUtils;
 		this.mListener = listener;
+		// 传入的色值;
 		this.mBgColor = bgColor;
 	}
 
@@ -57,6 +65,7 @@ public class FacePagerAdapter extends PagerAdapter {
 		}
 		int emoticons_gridId = UZResourcesIDFinder.getResIdID("emoticons_grid");
 		GridView grid = (GridView) layout.findViewById(emoticons_gridId);
+		// 设置的面板背景值;FIXME
 		grid.setBackgroundColor(mBgColor);
 		grid.setPadding(0, UZUtility.dipToPix(20), 0, 0);
 		GridAdapter adapter = new GridAdapter(mContext, mBitmapUtils,

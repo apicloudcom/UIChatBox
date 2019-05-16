@@ -24,17 +24,22 @@ public final class R {
         public static final int uz_splash_bg=0x7f020006;
     }
     public static final class id {
-        public static final int emoticons_grid=0x7f070003;
-        public static final int expand_grid=0x7f070002;
-        public static final int item=0x7f070004;
-        public static final int item_icon=0x7f070000;
-        public static final int item_text=0x7f070001;
+        public static final int emoticons_grid=0x7f070007;
+        public static final int expand_grid=0x7f070006;
+        public static final int item=0x7f070008;
+        public static final int item_icon=0x7f070004;
+        public static final int item_text=0x7f070005;
+        public static final int leftImg=0x7f070000;
+        public static final int leftTxt=0x7f070001;
+        public static final int rightImg=0x7f070002;
+        public static final int rightTxt=0x7f070003;
     }
     public static final class layout {
-        public static final int mo_uichatbox_expand_girdview_item=0x7f030000;
-        public static final int mo_uichatbox_expand_grid=0x7f030001;
-        public static final int mo_uichatbox_grid=0x7f030002;
-        public static final int mo_uichatbox_gridview_item=0x7f030003;
+        public static final int mo_uichatbox_center_extra_layout=0x7f030000;
+        public static final int mo_uichatbox_expand_girdview_item=0x7f030001;
+        public static final int mo_uichatbox_expand_grid=0x7f030002;
+        public static final int mo_uichatbox_grid=0x7f030003;
+        public static final int mo_uichatbox_gridview_item=0x7f030004;
     }
     public static final class string {
         public static final int app_name=0x7f050000;

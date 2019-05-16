@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -17,7 +24,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.DisplayMetrics;
-import android.util.Log;
 
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
@@ -38,8 +44,10 @@ public class JsParamsUtil {
 		}
 		return null;
 	}
+
 	/***
 	 * 在样式里面取出我们想要的变量；
+	 * 
 	 * @param moduleContext
 	 * @param parentName
 	 * @param name
@@ -47,12 +55,12 @@ public class JsParamsUtil {
 	 */
 	public JSONObject innerParamJSONObject(UZModuleContext moduleContext,
 			String parentName, String name) {
-		//解析出来第一层json数据；
+		// 解析出来第一层json数据；
 		JSONObject jsonObject = paramJSONObject(moduleContext, parentName);
 		if (jsonObject != null) {
-			//解析第二层json数据
+			// 解析第二层json数据
 			JSONObject innerObject = jsonObject.optJSONObject(name);
-		     //返回最低一层json；
+			// 返回最低一层json；
 			if (innerObject != null) {
 				return innerObject;
 			}
@@ -119,6 +127,83 @@ public class JsParamsUtil {
 		return UZUtility.parseCssColor(defaultValue);
 	}
 
+	public int inputBarTextMarginLeft(UZModuleContext moduleContext) {
+
+		JSONObject stylesObj = moduleContext.optJSONObject("styles");
+		if (stylesObj != null) {
+			JSONObject inputBarObj = stylesObj.optJSONObject("inputBar");
+			if (inputBarObj != null) {
+				return UZUtility.dipToPix(inputBarObj.optInt("textMarginLeft",
+						5));
+			}
+		}
+		return UZUtility.dipToPix(5);
+	}
+
+	// ========= add new feature ==========
+
+	public String getRecordType(UZModuleContext moduleContext) {
+		String recordType = moduleContext
+				.optString("recordType", "pressRecord");
+		return recordType;
+	}
+
+	public String getRecordNormalImage(UZModuleContext uzContext) {
+		String nnormalImage = null;
+		JSONObject styles = uzContext.optJSONObject("styles");
+		if (styles != null) {
+			JSONObject recordPanelBtnObj = styles
+					.optJSONObject("recordPanelBtn");
+			if (recordPanelBtnObj != null) {
+				nnormalImage = recordPanelBtnObj.optString("normalImg");
+				return nnormalImage;
+			}
+		}
+		return nnormalImage;
+	}
+
+	public String getRecordActiveImg(UZModuleContext uzContext) {
+		String activeImg = null;
+		JSONObject styles = uzContext.optJSONObject("styles");
+		if (styles != null) {
+			JSONObject recordPanelBtnObj = styles
+					.optJSONObject("recordPanelBtn");
+			if (recordPanelBtnObj != null) {
+				activeImg = recordPanelBtnObj.optString("activeImg");
+				return activeImg;
+			}
+		}
+		return activeImg;
+	}
+
+	public int getRecordWidth(UZModuleContext uzContext) {
+		int width = UZUtility.dipToPix(100);
+		JSONObject styles = uzContext.optJSONObject("styles");
+		if (styles != null) {
+			JSONObject recordPanelBtnObj = styles
+					.optJSONObject("recordPanelBtn");
+			if (recordPanelBtnObj != null) {
+				width = UZUtility.dipToPix(recordPanelBtnObj.optInt("width"));
+			}
+		}
+		return width;
+	}
+
+	public int getRecordHeight(UZModuleContext uzContext) {
+		int height = UZUtility.dipToPix(100);
+		JSONObject styles = uzContext.optJSONObject("styles");
+		if (styles != null) {
+			JSONObject recordPanelBtnObj = styles
+					.optJSONObject("recordPanelBtn");
+			if (recordPanelBtnObj != null) {
+				height = UZUtility.dipToPix(recordPanelBtnObj.optInt("height"));
+			}
+		}
+		return height;
+	}
+
+	// ========= add new feature ==========
+
 	public int inputBarBgColor(UZModuleContext moduleContext) {
 		String defaultValue = "#f2f2f2";
 		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
@@ -130,6 +215,27 @@ public class JsParamsUtil {
 		return UZUtility.parseCssColor(defaultValue);
 	}
 
+	public int inputTextColor(UZModuleContext moduleContext) {
+		String defaultValue = "#000";
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBar");
+		if (jsonObject != null) {
+			return UZUtility.parseCssColor(jsonObject.optString("textColor",
+					defaultValue));
+		}
+		return UZUtility.parseCssColor(defaultValue);
+	}
+
+	public int inputTextSize(UZModuleContext moduleContext) {
+
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBar");
+		if (jsonObject != null) {
+			return jsonObject.optInt("textSize", 16);
+		}
+		return 16;
+	}
+
 	public int inputBoxBorderColor(UZModuleContext moduleContext) {
 		String defaultValue = "#B3B3B3";
 		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
@@ -139,6 +245,42 @@ public class JsParamsUtil {
 					defaultValue));
 		}
 		return UZUtility.parseCssColor(defaultValue);
+	}
+
+	public int inputBoxBorderCorner(UZModuleContext moduleContext) {
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBox");
+		if (jsonObject != null) {
+			return UZUtility.dipToPix(jsonObject.optInt("borderCorner", 5));
+		}
+		return UZUtility.dipToPix(5);
+	}
+
+	/***
+	 * 表情控制面板的背景颜色;
+	 * 
+	 * @param moduleContext
+	 * @return
+	 */
+	public int inputBoxBoardBgColor(UZModuleContext moduleContext) {
+		String defaultValue = "#f2f2f2";
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBox");
+		if (jsonObject != null) {
+			return UZUtility.parseCssColor(jsonObject.optString("boardBgColor",
+					defaultValue));
+		}
+		return UZUtility.parseCssColor(defaultValue);
+	}
+
+	public int inputBoxTopMargin(UZModuleContext moduleContext) {
+		int defaultValue = 10;
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBox");
+		if (jsonObject != null) {
+			return UZUtility.dipToPix(jsonObject.optInt("topMargin", 10));
+		}
+		return UZUtility.dipToPix(defaultValue);
 	}
 
 	public int inputBoxBgColor(UZModuleContext moduleContext) {
@@ -325,7 +467,7 @@ public class JsParamsUtil {
 		}
 		return defaultValue;
 	}
-	
+
 	public int sendBtnTitleSize(UZModuleContext moduleContext) {
 		int defaultValue = 13;
 		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
@@ -477,5 +619,32 @@ public class JsParamsUtil {
 		DisplayMetrics metric = new DisplayMetrics();
 		act.getWindowManager().getDefaultDisplay().getMetrics(metric);
 		return metric.heightPixels;
+	}
+
+	public String inputBoxLeftIconPath(UZModuleContext moduleContext) {
+
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBox");
+
+		if (jsonObject != null) {
+			JSONObject leftIconObj = jsonObject.optJSONObject("leftIcon");
+			if (leftIconObj != null) {
+				return moduleContext
+						.makeRealPath(leftIconObj.optString("path"));
+			}
+		}
+		return null;
+	}
+
+	public int inputBoxLeftIconSize(UZModuleContext moduleContext) {
+		JSONObject jsonObject = innerParamJSONObject(moduleContext, "styles",
+				"inputBox");
+		if (jsonObject != null) {
+			JSONObject leftIconObj = jsonObject.optJSONObject("leftIcon");
+			if (leftIconObj != null) {
+				return UZUtility.dipToPix(leftIconObj.optInt("size", 20));
+			}
+		}
+		return UZUtility.dipToPix(20);
 	}
 }

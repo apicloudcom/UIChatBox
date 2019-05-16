@@ -18,12 +18,12 @@
     }
 }
 
-- (id)initWithFrame:(CGRect)frame{
+- (id)initWithFrame:(CGRect)frame textMarginLeft:(CGFloat)marginLeft{
     self = [super initWithFrame:frame];
     if (self) {
         //标签
         UILabel *markLabel = [[UILabel alloc]init];
-        markLabel.frame = CGRectMake(5, 1, frame.size.width-20, frame.size.height);
+        markLabel.frame = CGRectMake(5+marginLeft+1, 1, frame.size.width-20, frame.size.height);
         markLabel.backgroundColor = [UIColor clearColor];
         markLabel.textColor = [UIColor grayColor];
         markLabel.textAlignment = NSTextAlignmentLeft;
@@ -32,6 +32,12 @@
         self.placeholder = markLabel;
     }
     return self;
+}
+
+-(CGRect)caretRectForPosition:(UITextPosition *)position{
+    CGRect originalRect = [super caretRectForPosition:position];
+    originalRect.size.height = _placeholderSize+4;
+    return originalRect;
 }
 
 @end

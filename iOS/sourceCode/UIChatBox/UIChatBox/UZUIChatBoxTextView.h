@@ -8,7 +8,10 @@
 #import <UIKit/UIKit.h>
 
 @interface UZUIChatBoxTextView : UITextView
-
+- (id)initWithFrame:(CGRect)frame textMarginLeft:(CGFloat)marginLeft;
 @property (nonatomic, strong) UILabel *placeholder;
+
+@property (nonatomic, assign) CGFloat placeholderSize;
+@property (nonatomic, assign) CGFloat textMarginLeft;
 
 @end

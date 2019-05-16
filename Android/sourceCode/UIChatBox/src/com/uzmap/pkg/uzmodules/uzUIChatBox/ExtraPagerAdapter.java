@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -23,8 +30,10 @@ public class ExtraPagerAdapter extends PagerAdapter {
 	private ViewPager mViewPager;
 	private UzUIChatBox mModule;
 	private int mBgColor;
+
 	/***
 	 * 轮播器数据;
+	 * 
 	 * @param module
 	 * @param mExpandData
 	 * @param mContext
@@ -34,7 +43,7 @@ public class ExtraPagerAdapter extends PagerAdapter {
 	 */
 	public ExtraPagerAdapter(UzUIChatBox module,
 			ArrayList<ExpandData> mExpandData, Context mContext,
-			ViewPager mViewPager, UZModuleContext mModuleContext,int bgColor) {
+			ViewPager mViewPager, UZModuleContext mModuleContext, int bgColor) {
 		this.mModule = module;
 		this.mExpandData = mExpandData;
 		this.mContext = mContext;
@@ -67,12 +76,15 @@ public class ExtraPagerAdapter extends PagerAdapter {
 		}
 		int emoticons_gridId = UZResourcesIDFinder.getResIdID("expand_grid");
 		GridView grid = (GridView) layout.findViewById(emoticons_gridId);
+
 		grid.setPadding(0, UZUtility.dipToPix(20), 0, 0);
 		grid.setBackgroundColor(mBgColor);
 		ExpandGridAdapter adapter = new ExpandGridAdapter(mModule, imageInPage,
 				mContext, mViewPager, mModuleContext);
+
 		grid.setAdapter(adapter);
 		((ViewPager) collection).addView(layout);
+
 		return layout;
 	}
 

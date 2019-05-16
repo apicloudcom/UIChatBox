@@ -10,6 +10,7 @@
 		03F962B21B4BE6F2006F9E28 /* UZUIChatBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 03F962AD1B4BE6F2006F9E28 /* UZUIChatBox.m */; };
 		03F962B31B4BE6F2006F9E28 /* UZUIChatBoxBtnView.m in Sources */ = {isa = PBXBuildFile; fileRef = 03F962AF1B4BE6F2006F9E28 /* UZUIChatBoxBtnView.m */; };
 		03F962B41B4BE6F2006F9E28 /* UZUIChatBoxTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 03F962B11B4BE6F2006F9E28 /* UZUIChatBoxTextView.m */; };
+		B67F64E21FF4D58F00F5A257 /* UZUIChatBoxAttachment.m in Sources */ = {isa = PBXBuildFile; fileRef = B67F64E11FF4D58F00F5A257 /* UZUIChatBoxAttachment.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,6 +45,8 @@
 		03F962B51B4BE703006F9E28 /* NSDictionaryUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDictionaryUtils.h; sourceTree = "<group>"; };
 		03F962B61B4BE703006F9E28 /* UZAppUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZAppUtils.h; sourceTree = "<group>"; };
 		03F962B71B4BE703006F9E28 /* UZModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZModule.h; sourceTree = "<group>"; };
+		B67F64E01FF4D58F00F5A257 /* UZUIChatBoxAttachment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UZUIChatBoxAttachment.h; sourceTree = "<group>"; };
+		B67F64E11FF4D58F00F5A257 /* UZUIChatBoxAttachment.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UZUIChatBoxAttachment.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +87,8 @@
 				03F962AF1B4BE6F2006F9E28 /* UZUIChatBoxBtnView.m */,
 				03F962B01B4BE6F2006F9E28 /* UZUIChatBoxTextView.h */,
 				03F962B11B4BE6F2006F9E28 /* UZUIChatBoxTextView.m */,
+				B67F64E01FF4D58F00F5A257 /* UZUIChatBoxAttachment.h */,
+				B67F64E11FF4D58F00F5A257 /* UZUIChatBoxAttachment.m */,
 				03F962A31B4BE6E4006F9E28 /* JSON */,
 			);
 			path = UIChatBox;
@@ -187,6 +192,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				03F962B21B4BE6F2006F9E28 /* UZUIChatBox.m in Sources */,
+				B67F64E21FF4D58F00F5A257 /* UZUIChatBoxAttachment.m in Sources */,
 				03F962B31B4BE6F2006F9E28 /* UZUIChatBoxBtnView.m in Sources */,
 				03F962B41B4BE6F2006F9E28 /* UZUIChatBoxTextView.m in Sources */,
 			);

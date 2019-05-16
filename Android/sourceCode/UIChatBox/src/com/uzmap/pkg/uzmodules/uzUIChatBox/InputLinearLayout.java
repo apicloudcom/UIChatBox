@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -6,7 +13,11 @@
 //
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
+import com.uzmap.pkg.uzkit.UZUtility;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
@@ -19,6 +30,7 @@ public class InputLinearLayout extends LinearLayout {
 	public InputLinearLayout(Context context) {
 		super(context);
 		init();
+		setPadding(0, UZUtility.dipToPix(5), 0, UZUtility.dipToPix(5));
 	}
 
 	public InputLinearLayout(Context context, AttributeSet attrs) {
@@ -33,11 +45,43 @@ public class InputLinearLayout extends LinearLayout {
 		mPaint.setColor(Constans.INPUT_LAYOUT_BORDER_COLOR);
 	}
 
+	private Bitmap topBorderBmp;
+	private int topBorderColor = 0xFF000000;
+	private int topBorderHeight = UZUtility.dipToPix(0);
+	private Paint mTopBorderPaint = new Paint();
+
+	public void initPaint() {
+		mTopBorderPaint.setStyle(Style.FILL);
+	}
+
+	public void setTopBorderBitmap(Bitmap bmp) {
+		this.topBorderBmp = bmp;
+	}
+
+	public void setTopBorderHeight(int height) {
+		this.topBorderHeight = height;
+	}
+
+	public void setTopBorderColor(int color) {
+		this.topBorderColor = color;
+	}
+
+	@SuppressLint("DrawAllocation")
 	@Override
 	protected void onDraw(Canvas canvas) {
 		int height = getMeasuredHeight();
 		int width = getMeasuredWidth();
-		canvas.drawLine(0, 0, width, 0, mPaint);
+
+		if (topBorderBmp != null) {
+			Bitmap bmp = Bitmap.createScaledBitmap(topBorderBmp, getWidth(),
+					topBorderHeight, true);
+			canvas.drawBitmap(bmp, 0, 0, mTopBorderPaint);
+		} else {
+			mTopBorderPaint.setColor(topBorderColor);
+			mTopBorderPaint.setStrokeWidth(topBorderHeight);
+			canvas.drawLine(0, 0, getWidth(), 0, mTopBorderPaint);
+		}
+
 		canvas.drawLine(0, height, width, height, mPaint);
 		super.onDraw(canvas);
 	}

@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -7,7 +14,6 @@
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
 import android.content.Context;
-
 import android.os.Handler;
 import android.widget.LinearLayout;
 /**
@@ -24,6 +30,7 @@ public class ChatBoxLayout extends LinearLayout {
 
 	public ChatBoxLayout(Context context) {
 		super(context);
+		setWillNotDraw(false);
 	}
 
 	public void setUiChatBox(UzUIChatBox uiChatBox) {
@@ -53,5 +60,5 @@ public class ChatBoxLayout extends LinearLayout {
 			mUiChatBox.openCallBack("show", 0);
 		}
 	};
-
+	
 }

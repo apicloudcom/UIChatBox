@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
 import com.uzmap.pkg.uzkit.UZUtility;
@@ -99,15 +106,15 @@ public class CustomButton extends Button {
 			if (mNormalBgBitmap != null) {
 				canvas.drawBitmap(mNormalBgBitmap, mNormalRect, mNormalRect,
 						null);
-			}else{
+			} else {
 				mPaint.setColor(mNormalBgColor);
 				canvas.drawRoundRect(mBgRect, mCorner, mCorner, mPaint);
 			}
 		} else {
-			if(mHighlightBgBitmap!=null){
+			if (mHighlightBgBitmap != null) {
 				canvas.drawBitmap(mHighlightBgBitmap, mHighlightRect,
 						mHighlightRect, null);
-			}else{
+			} else {
 				mPaint.setColor(mHighlightBgColor);
 				canvas.drawRoundRect(mBgRect, mCorner, mCorner, mPaint);
 			}

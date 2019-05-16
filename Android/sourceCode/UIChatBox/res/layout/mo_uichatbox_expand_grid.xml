@@ -10,7 +10,7 @@
         android:id="@+id/expand_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:horizontalSpacing="8dp"
+        android:horizontalSpacing="20dp"
         android:numColumns="4"
         android:verticalSpacing="20dp" />
 

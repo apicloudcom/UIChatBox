@@ -1,0 +1,509 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<title>Hello APP</title>
+		<link rel="stylesheet" type="text/css" href="../css/api.css" />
+		<style>
+			section {
+				position: relative;
+				top: 400px;
+				margin: 8px;
+				background-color: #fff;
+			}
+			
+			h2 {
+				position: relative;
+				height: 44px;
+				line-height: 44px;
+				color: #888;
+			}
+			
+			div {
+				position: relative;
+				height: 56px;
+				margin: 8px;
+				text-align: center;
+				font-size: 12px;
+				line-height: 56px;
+				color: #fff;
+				background-color: #354399;
+				background-clip: padding;
+				box-shadow: 0 0 1px 1px #ccc;
+				border-radius: 2px;
+			}
+			
+			.active {
+				opacity: 0.7;
+			}
+			
+		</style>
+	</head>
+	<body>
+	
+			<h2>UIChatBox</h2>
+			<div tapmode="active" onclick="fnOpen()">
+				打开聊天输入框
+			</div>
+			<div tapmode="active" onclick="fnClose()">
+				关闭聊天输入框
+			</div>
+			<div tapmode="active" onclick="fnShow()">
+				显示聊天输入框
+			</div>
+			<div tapmode="active" onclick="fnHide()">
+				隐藏聊天输入框
+			</div>
+			<div tapmode="active" onclick="fnPopupKeyboard()">
+				弹出键盘
+			</div>
+			<div tapmode="active" onclick="fnCloseKeyboard()">
+				收起键盘
+			</div>
+			<div tapmode="active" onclick="fnPopupBoard()">
+				弹出表情，附加功能面板
+			</div>
+			<div tapmode="active" onclick="fnCloseBoard()">
+				收起表情，附加功能面板
+			</div>
+			<div tapmode="active" onclick="fnSetValue()">
+				获取或设置聊天输入框内容
+			</div>
+			<div tapmode="active" onclick="fnInsertValue()">
+				向输入框的指定位置插入内容
+			</div>
+			<div tapmode="active" onclick="fnAddEventListener()">
+				事件监听
+			</div>
+			<div tapmode="active" onclick="fnSetPlaceholder()">
+				重设聊天输入框的占位提示符
+			</div>
+			<div tapmode="active" onclick="fnReloadExtraBoard()">
+				重新加载（刷新）附加功能面板
+			</div>
+			
+			
+			
+			<div tapmode="active" onclick="testKeyboardHeight()">
+				testKeyboardHeight
+			</div>
+			
+			
+			
+			<br>
+			<br>
+			<br>
+			<br>
+			<br>
+		
+			
+	</body>
+	<script type="text/javascript" src="../script/api.js"></script>
+	<script type="text/javascript">
+	
+		window.apiready = function() {
+//			fnAddEventListener();
+		}
+		
+		function fnOpen() {
+			console.log("open");
+			var obj = api.require('UIChatBox');
+			obj.open(
+			{
+				placeholder:'请输入评论内容',
+				autoFocus:true,
+				maxRows : 3,   
+				emotionPath:'widget://image/emotion',
+				recordType:'recordPanel',    //recordPanel
+				disableSendMessage:false,
+				texts:{
+				    recordBtn: {                        //（可选项）JSON对象；录音按钮文字内容
+				        normalTitle: '按住 说话',        //（可选项）字符串类型；按钮常态的标题，默认：'按住 说话'
+				        activeTitle: '松开 结束'         //（可选项）字符串类型；按钮按下时的标题，默认：'松开 结束'
+				    },
+				    sendBtn: {                         //（可选项）JSON对象；发送按钮文字内容，在 iOS 平台上对键盘内按钮无效
+				        title: '发送11'                   //（可选项）字符串类型；按钮常态的标题，默认：'发送'
+				    }
+				},
+				styles:{
+					inputBar : {//（可选项）JSON对象；输入区域（输入框及两侧按钮）整体样式
+						borderColor : '#CDAD00', //（可选项）字符串类型；输入框区域上下边框的颜色，支持rgb，rgba，#；默认：'#d9d9d9'
+						bgColor : '#F00' //（可选项）字符串类型；输入框区域的整体背景色，支持rgb，rgba，#；默认：'#f2f2f2'
+					},
+					inputBox : {//（可选项）JSON对象；输入框样式
+						borderColor : '#BC8F8F', //（可选项）字符串类型；输入框的边框颜色，支持rgb，rgba，#；默认：'#B3B3B3'
+						bgColor : '#FFFFFF', //（可选项）字符串类型；输入框的背景色，支持rgb，rgba，#；默认：'#FFFFFF'
+						boardBgColor:'#D6D6D6'   //面板背景颜色
+						
+					},
+					emotionBtn : {  //JSON对象；表情按钮样式
+						normalImg : 'widget://image/uiChatbox/weixiao.png', //字符串类型；表情按钮常态的背景图片（本地路径，fs://，widget://）；默认：笑脸小图标
+									//normalImg : 'widget://image/uiChatbox/emotion' 
+					},
+					extrasBtn : {   //（可选项）JSON对象；附加功能按钮样式，不传则不显示附加功能按钮
+						normalImg : 'widget://image/uiChatbox/tianjia.png' //（可选项）字符串类型；附加功能按钮常态的背景图片（本地路径，fs://，widget://）
+					},
+					keyboardBtn : { //JSON对象；键盘按钮样式
+						normalImg : 'widget://image/uiChatbox/jianpan.png' //字符串类型；键盘按钮常态的背景图片（本地路径，fs://，widget://）；默认：键盘小图标
+					},
+					speechBtn : {   //（可选项）JSON对象；输入框左侧按钮样式，不传则不显示左边的语音按钮
+						normalImg : 'widget://image/uiChatbox/recordbtnSelector.png', //字符串类型；左侧按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : 'widget://image/uiChatbox/record.png'
+					},
+					recordBtn : {   //JSON对象；“按住 录音”按钮的样式
+						normalBg : 'widget://image/uiChatbox/recordbg.png', //（可选项）字符串类型；按钮常态的背景，支持rgb，rgba，#，图片路径（本地路径，fs://，widget://）；默认：'#c4c4c4'
+						activeBg : 'widget://image/uiChatbox/recordbtnSelector.png', //（可选项）字符串类型；按钮按下时的背景，支持rgb，rgba，#，图片路径（本地路径，fs://，widget://）；默认：'#999999'；normalBg 和 activeBg 必须保持一致，同为颜色值，或同为图片路径
+						color : '#000', //（可选项）字符串类型；按钮标题文字的颜色，支持rgb，rgba，#，默认：'#000000'
+						size : 8    //（可选项）数字类型；按钮标题文字的大小，默认：14
+					},
+					recordPanelBtn:{           //JSON对象；录音面板样式
+					     normalImg:'widget://image/uiChatbox/yuyinshuru.png',       //（可选项）字符串类型；按钮常态的图片
+					     activeImg:'widget://image/uiChatbox/record.png' ,          //（可选项）字符串类型；按钮按下时的图片
+					     width:100,           //（可选项）数字类型；按钮的宽度，默认：100
+					     height:100           //（可选项）数字类型；按钮的高度，默认：100
+					},
+					indicator : {
+					    //（可选项）JSON对象；表情和附加功能面板的小圆点指示器样式，若不传则不显示该指示器
+						target : 'both', //（可选项）字符串类型；配置指示器的显示区域；默认：'both'
+						//取值范围：
+						//both（表情和附加功能面板皆显示）
+						//emotionPanel（表情面板显示）
+						//extrasPanel（附加功能面板显示）
+						color : '#CD69C9', //（可选项）字符串类型；指示器颜色；支持rgb、rgba、#；默认：'#c4c4c4'
+//						activeColor : '#B5B5B5' //（可选项）字符串类型；当前指示器颜色；支持rgb、rgba、#；默认：'#9e9e9e'
+					},
+					sendBtn : {//（可选项）JSON对象；发送按钮样式，本参数对 IOS 平台上的键盘内发送按钮无效
+						bg : '#FFC125', //（可选项）字符串类型；发送按钮背景颜色，支持rgb、rgba、#、img；默认：#4cc518
+						titleColor : '#000', //（可选项）字符串类型；发送按钮标题颜色；默认：#ffffff
+						activeBg : '#FFC125', //（可选项）字符串类型；发送按钮背景颜色，支持rgb、rgba、#、img；默认：无
+						titleSize : 13 //（可选项）数字类型；发送按钮标题字体大小；默认：13
+					}
+				},
+				extras : {
+					titleSize : 8, //（可选项）数字类型；标题文字大小，默认：10
+					titleColor : '#000', //（可选项）字符串类型；标题文字颜色，支持rgb、rgba、#；默认：'#a3a3a3'
+					isAdaptScreenSize:false,
+					btns : [{ //数组类型；附加功能按钮的样式
+						title : '图片', //（可选项）字符串类型；附加功能按钮的标题内容
+						normalImg : 'widget://image/uiChatbox/tianjia.png', //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : '' //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://，widget://）
+					},{//数组类型；附加功能按钮的样式
+						title : '收藏', //（可选项）字符串类型；附加功能按钮的标题内容
+						normalImg : 'widget://image/uiChatbox/shoucang.png', //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : '' //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://，widget://）
+					},{//数组类型；附加功能按钮的样式
+						title : '视频', //（可选项）字符串类型；附加功能按钮的标题内容
+						normalImg : 'widget://image/uiChatbox/paishe.png', //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : '' //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://，widget://）
+					},
+					{//数组类型；附加功能按钮的样式
+						title : '红包', //（可选项）字符串类型；附加功能按钮的标题内容
+						normalImg : 'widget://image/uiChatbox/hongbao.png', //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : '' //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://，widget://）
+					},{//数组类型；附加功能按钮的样式
+						title : '小视频', //（可选项）字符串类型；附加功能按钮的标题内容
+						normalImg : 'widget://image/uiChatbox/xiaoshipin.png', //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : '' //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://，widget://）
+					},{//数组类型；附加功能按钮的样式
+						title : '小视频', //（可选项）字符串类型；附加功能按钮的标题内容
+						normalImg : 'widget://image/uiChatbox/xiaoshipin.png', //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://，widget://）
+						activeImg : '' //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://，widget://）
+					}]
+				},
+			
+			}, function(ret) {
+				//点击发送按钮
+				if (ret.eventType == 'send') {
+					alert('输入的内容是：' + JSON.stringify(ret));
+//					postSubmit(ret.msg);
+					
+				}
+				
+			});
+		};
+		function fnClose() {
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.close();
+		};
+		function fnShow(){
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.show();
+		}
+		function fnHide(){
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.hide();
+		}
+		function fnPopupKeyboard(){
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.popupKeyboard();
+			
+		}
+		function fnCloseKeyboard(){
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.closeKeyboard();
+		}
+		function fnPopupBoard(){
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.popupBoard({
+				target: 'extras'  //功能面板
+			});
+		}
+		function fnCloseBoard(){
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.closeBoard();
+		}
+		
+		function fnSetValue(){
+		var UIChatBox = api.require('UIChatBox');
+			//设置输入框的值
+			UIChatBox.value({
+				msg: '设置输入框的值'
+			});
+			
+			//获取输入框的值
+			UIChatBox.value(function(ret, err) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		}
+		
+		function fnInsertValue(){
+		var UIChatBox = api.require('UIChatBox');
+			UIChatBox.insertValue({
+				index: 2,
+				msg: '2位置插入的字符串'
+			});
+		}
+		
+		function fnAddEventListener() {
+			
+//			var UIChatBox = api.require('UIChatBox');
+//			UIChatBox.addEventListener({
+//				target : 'recordBtn',
+//				name : 'press'
+//			}, function(ret, err) {
+//				if (ret) {
+//					console.log("press:"+JSON.stringify(ret));
+//					alert("press:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+//			UIChatBox.addEventListener({
+//				target : 'recordBtn',
+//				name : 'press_cancel'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("press_cancel:"+JSON.stringify(ret));
+//					alert("press_cancel:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+//				UIChatBox.addEventListener({
+//				target : 'recordBtn',
+//				name : 'move_out'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("move_out:"+JSON.stringify(ret));
+//					alert("move_out:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+//				UIChatBox.addEventListener({
+//				target : 'recordBtn',
+//				name : 'move_out_cancel'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("move_out_cancel:"+JSON.stringify(ret));
+//					alert("move_out_cancel:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+//			UIChatBox.addEventListener({
+//				target : 'recordBtn',
+//				name : 'move_in'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("move_in:"+JSON.stringify(ret));
+//					alert("move_in:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+//			监听 inputBar
+			var UIChatBox = api.require('UIChatBox');
+//			UIChatBox.addEventListener({
+//				target : 'inputBar',
+//				name : 'move'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("输入框所在区域弹动:"+JSON.stringify(ret));
+//					alert("输入框所在区域弹动:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+			UIChatBox.addEventListener({
+				target : 'inputBar',
+				name : 'change'
+			}, function(ret, err) {
+				if (ret) {
+				console.log("输入框所在区域高度改变:"+JSON.stringify(ret));
+					alert("输入框所在区域高度改变:"+JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+			UIChatBox.addEventListener({
+				target : 'inputBar',
+				name : 'showRecord'
+			}, function(ret, err) {
+				if (ret) {
+				console.log("用户点击左侧语音按钮:"+JSON.stringify(ret));
+					alert("用户点击左侧语音按钮:"+JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+			
+//			UIChatBox.addEventListener({
+//				target : 'inputBar',
+//				name : 'showEmotion'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("用户点击表情按钮:"+JSON.stringify(ret));
+//					alert("用户点击表情按钮:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+//			UIChatBox.addEventListener({
+//				target : 'inputBar',
+//				name : 'showExtras'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("用户点击右侧附加功能按钮:"+JSON.stringify(ret));
+//					alert("用户点击右侧附加功能按钮:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+
+//			UIChatBox.addEventListener({
+//				target : 'inputBar',
+//				name : 'valueChanged'
+//			}, function(ret, err) {
+//				if (ret) {
+//				console.log("输入框内容改变事件:"+JSON.stringify(ret));
+//					alert("输入框内容改变事件:"+JSON.stringify(ret));
+//				} else {
+//					alert(JSON.stringify(err));
+//				}
+//			});
+
+		};
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		function testKeyboardHeight(){
+			var chatBox = api.require('UIChatBox');
+			chatBox.addEventListener({
+            	target: 'inputBar',
+            	name: 'move'
+        	}, function (ret) {
+				alert(JSON.stringify(ret));
+        	});
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		function fnSetPlaceholder(){
+		var UIChatBox = api.require('UIChatBox');
+			UIChatBox.setPlaceholder({
+				placeholder: '修改了占位提示内容'
+			});
+		}
+		function fnReloadExtraBoard() {
+			var UIChatBox = api.require('UIChatBox');
+			UIChatBox.reloadExtraBoard({
+				extras : {
+					titleSize : 10,
+					titleColor : '#a3a3a3',
+					btns : [{
+						title : '照片',
+						normalImg : 'widget://image/uiChatbox/zhaopian.png',
+						activeImg : 'widget://res/img/chatBox_album2.png'
+					}, {
+						title : '拍摄',
+						normalImg : 'widget://image/paishe.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '小视频',
+						normalImg : 'widget://image/uiChatbox/xiaoshipin.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '视频聊天',
+						normalImg : 'widget://image/uiChatbox/shipinliaotian.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '红包',
+						normalImg : 'widget://image/uiChatbox/hongbao.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '转账',
+						normalImg : 'widget://image/uiChatbox/zhuanzhang.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '位置',
+						normalImg : 'widget://image/uiChatbox/weizhi.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '收藏',
+						normalImg : 'widget://image/uiChatbox/shoucang.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}, {
+						title : '语音输入',
+						normalImg : 'widget://image/uiChatbox/yuyinshuru.png',
+						activeImg : 'widget://res/img/chatBox_cam2.png'
+					}]
+				}
+			});
+		};
+	</script>
+</html>

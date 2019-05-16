@@ -1,9 +1,17 @@
+﻿/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
 //Modified by magic 15/9/14.
 //Copyright (c) 2015年 APICloud. All rights reserved.
 //
+
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
 import android.graphics.*;

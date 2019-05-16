@@ -6,7 +6,12 @@ APICloud 的 UIChatBox 模块是一个聊天输入框模块，可通过此模块
 
 # 模块接口
 
-<p style="color: #ccc; margin-bottom: 30px;">来自于：APICloud 官方</p>
+/*
+Title: UIChatBox
+Description: UIChatBox
+*/
+
+<p style="color: #ccc; margin-bottom: 30px;">来自于：APICloud 官方<a style="background-color: #95ba20; color:#fff; padding:4px 8px;border-radius:5px;margin-left:30px; margin-bottom:0px; font-size:12px;text-decoration:none;" target="_blank" href="//www.apicloud.com/mod_detail/UIChatBox">立即使用</a></p>
 
 <div class="outline">
 
@@ -23,6 +28,7 @@ APICloud 的 UIChatBox 模块是一个聊天输入框模块，可通过此模块
 [addEventListener](#addEventListener)
 [setPlaceholder](#setPlaceholder)
 [reloadExtraBoard](#reloadExtraBoard)
+[cancelRecord](#cancelRecord)
 
 </div>
 
@@ -53,8 +59,9 @@ UIChatBox 模块是一个聊天输入框模块，开发者可自定义该输入�
 
 模块预览图如下：
 
-![UIChatBox](http://docs.apicloud.com/img/docImage/chatBox.jpg)
+![UIChatBox](/img/docImage/chatBox.jpg)
 
+***本模块源码已开源，地址为：https://github.com/apicloudcom/UIChatBox***
 
 ## [实例widget下载地址](https://github.com/apicloudcom/UIChatBox-Example/archive/master.zip)
 
@@ -102,7 +109,7 @@ emotionPath：
 
 - `.json`配置文件所在目录：
 
-![emotionPath](https://docs.apicloud.com/img/emotionPath.png)
+![emotionPath](/img/emotionPath.png)
 
 texts：
 
@@ -113,11 +120,11 @@ texts：
 ```js
 {
     recordBtn: {                        //（可选项）JSON对象；录音按钮文字内容
-        normalTitle: '按住 说话',       //（可选项）字符串类型；按钮常态的标题，默认：'按住 说话'
-        activeTitle: '松开 结束'        //（可选项）字符串类型；按钮按下时的标题，默认：'松开 结束'
+        normalTitle: '按住 说话',        //（可选项）字符串类型；按钮常态的标题，默认：'按住 说话'
+        activeTitle: '松开 结束'         //（可选项）字符串类型；按钮按下时的标题，默认：'松开 结束'
     },
-    sendBtn: {                        //（可选项）JSON对象；发送按钮文字内容，在 iOS 平台上对键盘内按钮无效
-        title: '发送'                  //（可选项）字符串类型；按钮常态的标题，默认：'发送'
+    sendBtn: {                         //（可选项）JSON对象；发送按钮文字内容，在 iOS 平台上对键盘内按钮无效
+        title: '发送'                   //（可选项）字符串类型；按钮常态的标题，默认：'发送'
     }
 }
 ```
@@ -125,22 +132,36 @@ texts：
 styles：
 
 - 类型：JSON 对象
-- 描述：（可选项）模块各部分的样式集合
+- 描述：模块各部分的样式集合
 - 内部字段：
 
 ```js
-{
-    inputBar: {                         //（可选项）JSON对象；输入区域（输入框及两侧按钮）整体样式      
+{  
+    topDivider:{                        //(可选项)顶部分割线配置
+	width:3,                        //(可选项)顶部分割线的粗细，默认：0 
+	color:'#000'                    //(可选项)顶部分割线的颜色；默认：#000 ;支持图片设置(fs:// & widget://)
+    },
+    inputBar:{                          //（可选项）JSON对象；输入区域（输入框及两侧按钮）整体样式      
         borderColor: '#d9d9d9',         //（可选项）字符串类型；输入框区域上下边框的颜色，支持 rgb，rgba，#；默认：'#d9d9d9'
-        bgColor: '#f2f2f2'              //（可选项）字符串类型；输入框区域的整体背景色，支持 rgb，rgba，#；默认：'#f2f2f2' 
+        bgColor: '#f2f2f2',             //（可选项）字符串类型；输入框区域的整体背景色，支持 rgb，rgba，#；默认：'#f2f2f2'
+	textColor:'#000',               //（可选项）字符串类型；输入文字的颜色；默认：#000
+	textSize:16,                    //（可选项）数字类型；默认：16
+	textMarginLeft:5                //（可选项）数字类型；光标距离左边框的距离，默认：5
     },
     inputBox: {                         //（可选项）JSON对象；输入框样式
         borderColor: '#B3B3B3',         //（可选项）字符串类型；输入框的边框颜色，支持 rgb，rgba，#；默认：'#B3B3B3'
-        bgColor: '#FFFFFF'              //（可选项）字符串类型；输入框的背景色，支持 rgb，rgba，#；默认：'#FFFFFF'
+        bgColor: '#f2f2f2',             //（可选项）字符串类型；输入框的背景色，支持 rgb，rgba，#；默认：'#f2f2f2'
+        boardBgColor: '#f2f2f2',        //（可选项）字符串类型；面板的背景色(表情面板，附加面板)，支持 rgb，rgba，#；默认：'#f2f2f2'
+        topMargin:10,                   //（可选项）数字类型；输入框距离顶部的边距；默认：10
+	borderCorner:5,                 //(可选项)数字类型；默认：5
+	leftIcon:{                      //(可选项)JSON对象，输入框左侧图标  本参数仅支持android
+		size:20,                //(可选项)数字类型；icon的大小；默认：20
+		path:'widget://res/left_icon.jpg'//字符串类型；icon的路径；支持widget:// fs://
+	}
     },
-    emotionBtn: {                       //JSON对象；表情按钮样式
-        normalImg: 'widget://'          //字符串类型；表情按钮常态的背景图片（本地路径，fs://、widget://）；默认：笑脸小图标
-    },
+    emotionBtn: {                       //（可选项）JSON对象；表情按钮样式；不传则不显示表情按钮
+        normalImg: 'widget://'          //（可选项）字符串类型；表情按钮常态的背景图片（本地路径，fs://、widget://）；默认：笑脸小图标,
+	},
     extrasBtn: {                        //（可选项）JSON对象；附加功能按钮样式，不传则不显示附加功能按钮
         normalImg: 'widget://'          //（可选项）字符串类型；附加功能按钮常态的背景图片（本地路径，fs://、widget://）
     },
@@ -148,14 +169,22 @@ styles：
         normalImg: 'widget://'          //字符串类型；键盘按钮常态的背景图片（本地路径，fs://、widget://）；默认：键盘小图标
     },
     speechBtn: {                        //（可选项）JSON对象；输入框左侧按钮样式，不传则不显示左边的语音按钮
-        normalImg: 'widget://'          //字符串类型；左侧按钮常态的背景图片（本地路径，fs://、widget://）
+        normalImg: 'widget://',         //字符串类型；左侧按钮常态的背景图片（本地路径，fs://、widget://）
+        activeImg:''                    //字符串类型；左侧按钮按下的背景图片（本地路径，fs://、widget://）
     },
     recordBtn: {                        //JSON对象；“按住 录音”按钮的样式
         normalBg: '#c4c4c4',            //（可选项）字符串类型；按钮常态的背景，支持 rgb，rgba，#，图片路径（本地路径，fs://、widget://）；默认：'#c4c4c4'
         activeBg: '#999999',            //（可选项）字符串类型；按钮按下时的背景，支持 rgb，rgba，#，图片路径（本地路径，fs://、widget://）；默认：'#999999'；normalBg 和 activeBg 必须保持一致，同为颜色值，或同为图片路径
         color: '#000',                  //（可选项）字符串类型；按钮标题文字的颜色，支持 rgb，rgba，#，默认：'#000000'
         size: 14                        //（可选项）数字类型；按钮标题文字的大小，默认：14
-    },
+   },
+   recordPanelBtn:{                     //JSON对象；录音面板样式
+     normalImg: '',        //（可选项）字符串类型；按钮常态的图片
+     activeImg: ''         //（可选项）字符串类型；按钮按下时的图片
+     width:100,           //（可选项）数字类型；按钮的宽度，默认：100
+     height:100           //（可选项）数字类型；按钮的高度，默认：100
+   
+   },
     indicator: {                        //（可选项）JSON对象；表情和附加功能面板的小圆点指示器样式，若不传则不显示该指示器
         target: 'both',                 //（可选项）字符串类型；配置指示器的显示区域；默认：'both'
                                         //取值范围：
@@ -173,6 +202,18 @@ styles：
     }
 }
 ```
+isShowSendBtn：
+
+- 类型：布尔
+- 描述：（可选项）表情键盘上的发送按钮是否显示 **注意:本参数对 iOS 平台上的键盘内发送按钮无效 ，该参数仅支持iOS**
+- 默认：true
+
+
+disableSendMessage:
+
+- 类型：布尔类型
+- 描述：（可选项）是否禁言
+- 默认：false
 
 extras：
 
@@ -183,6 +224,8 @@ extras：
 {
     titleSize: 10,                  //（可选项）数字类型；标题文字大小，默认：10
     titleColor: '#a3a3a3',          //（可选项）字符串类型；标题文字颜色，支持 rgb、rgba、#；默认：'#a3a3a3'
+    isAdaptScreenSize:true          // (可选项) 布尔类型；附加功能按钮的样式是否自适应屏幕大小布局，改参数为false时，则每一行固定显示四个,若为true，则根据屏幕大小自动适配 默认：true
+    isCenterDisplay:false          // (可选项)布尔类型；附加功能按钮的样式是否居中显示，参数为false时，isAdaptScreenSize有效,若为true，则按钮居中显示； 默认：false
     btns: [{                        //数组类型；附加功能按钮的样式
         title: '图片',              //（可选项）字符串类型；附加功能按钮的标题内容                  
         normalImg: '',              //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://、widget://）
@@ -190,6 +233,21 @@ extras：
     }]
 }
 ```
+
+recordType：
+
+- 类型：字符串
+- 描述：（可选项）点击左边录音按钮所展示的类型
+- 默认：“按住 录音”按钮的样式
+- 取值范围：
+    - pressRecord  (“按住 录音”按钮的样式)
+    - recordPanel  (录音面板)
+
+isClose：
+
+- 类型：布尔值
+- 描述：（可选项）点击空白区域是否关闭整个模块(包括键盘)
+- 默认：false
 
 ## callback(ret)
 
@@ -205,8 +263,10 @@ ret：
                         //show（该模块打开成功）
                         //send（用户点击发送按钮）
                         //clickExtras（用户点击附加功能面板内的按钮）
+                        //clickRecord（用户点击录音功能面板内的按钮）
     index: 0,           //数字类型；当 eventType 为 clickExtras 时，此参数为用户点击附加功能按钮的索引，否则为 undefined
     msg: ''             //字符串类型；当 eventType 为 send 时，此参数返回输入框的内容，否则返回 undefined
+    inputBarHeight:30   //数字类型；输入框及左右按钮整体区域的高度
 }
 ```
 ## 示例代码
@@ -574,6 +634,7 @@ name：
         - move_out（按下录音按钮后，从按钮移出）
         - move_out_cancel（按下录音按钮后，从按钮移出并松开按钮）
         - move_in（move_out 事件后，重新移入按钮区域）
+	- recordCanceled 主动取消录音事件
     - 适用于 inputBar 对象
         - move（输入框所在区域弹动事件）
         - change（输入框所在区域高度改变）
@@ -736,6 +797,29 @@ UIChatBox.reloadExtraBoard({
 		}]
 	}
 });
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.0及更高版本
+
+
+<div id="cancelRecord"></div>
+
+# **cancelRecord**
+
+取消录音
+
+cancelRecord()
+
+
+## 示例代码
+
+```js
+var UIChatBox = api.require('UIChatBox');
+UIChatBox.cancelRecord();
 ```
 
 ## 可用性

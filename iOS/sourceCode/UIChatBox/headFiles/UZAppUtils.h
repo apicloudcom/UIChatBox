@@ -30,15 +30,16 @@
 + (BOOL)deviceIsIPhone6;
 + (BOOL)isSimulator;
 + (BOOL)popoverSupported;
-+ (NSString *)initialInterfaceOrientation;
 + (NSString *)getUUID;
 
 #pragma mark - Paths
 + (NSString *)filePathInBundle:(NSString *)fileName;
 + (NSString *)appLibraryPath;
 + (NSString *)filePathInLibrary:(NSString *)fileName;
++ (NSString *)appLibraryCachesPath;
 + (NSString *)appDocumentPath;
 + (NSString *)filePathInDocument:(NSString *)fileName;
++ (NSString *)getPathWithUZSchemeURL:(NSString *)url;
 
 #pragma mark - Util
 + (BOOL)isValidColor:(NSString *)colorStr;

@@ -1,3 +1,9 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
 
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
@@ -11,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -23,7 +30,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.Editable;
@@ -32,7 +38,6 @@ import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -50,12 +55,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
+
 import com.uzmap.pkg.uzcore.UZCoreUtil;
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.UZWebView;
 import com.uzmap.pkg.uzcore.uzmodule.UZModule;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
+import com.uzmap.pkg.uzmodules.uzUIChatBox.CenterExtraPagerAdapter.PageData;
 import com.uzmap.pkg.uzmodules.uzUIChatBox.GridAdapter.KeyClickListener;
 import com.uzmap.pkg.uzmodules.uzUIChatBox.ViewBackground.BackgroundType;
 
@@ -76,9 +83,9 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private UZModuleContext mValueChangeCallBack;
 	private JsParamsUtil mJsParamsUtil;
 	private View mSpaceView;
-	//聊天框的布局;
+	// 聊天框的布局;
 	private ChatBoxLayout mChatBoxLayout;
-	
+
 	private InputLinearLayout mEditLayout;
 	private RelativeLayout mTableLayout;
 	private ChatBoxEditText mEditText;
@@ -87,27 +94,24 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private ImageView mFaceBtn;
 	private FrameLayout mSendLayout;
 	private ImageView mExstraBtn;
-	
+
 	private Button mSendBtn;
 	private ViewPager mFaceViewPager;
 	private ViewPager mExtraViewPager;
 	private IndictorView mIndictorView;
 	private String mEmotionsPath;
-	//第一个参数存储着表情的URL，第二个参数存储着表情的文本说明；
+
 	private Map<String, String> mEmotionMap;
 	private Map<String, String> mInsertEmotionMap;
 	private ArrayList<String> mEmotionsList;
 	private ArrayList<ExpandData> mExtraParams;
 	private BitmapUtils mBitmapUtils;
-	//最左侧初始化的时候显示的图标状态选择器
-	private StateListDrawable mSpeechBtnDrawable; 
-	//表情图标的状态选择器；
+
+	private StateListDrawable mSpeechBtnDrawable;
 	private StateListDrawable mFaceBtnDrawable;
-	//最左侧的出示图标点击后切换的状态选择器；
 	private StateListDrawable mSpeechKeyDrawable;
-	//键盘图标的状态选择器；
 	private StateListDrawable mKeyboardBtnDrawable;
-	
+
 	private Drawable mRecordNoramlDrawable;
 	private Drawable mRecordActiveDrawable;
 	private Animation mSendBtnShowAnimation;
@@ -117,7 +121,6 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private String mRecordNormalTitle;
 	private String mRecordActiveTitle;
 	private LayoutListener mLayoutListener;
-	private int mKeyboardHeight;
 	private boolean isOnlySendBtnExist;
 	private boolean isShowAnimation;
 	private boolean isKeyBoardVisible;
@@ -131,23 +134,47 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		}
 	};
 
+	private RelativeLayout mRecordPanel;
+	public static final String TAG = "Debug";
+
 	public UzUIChatBox(UZWebView webView) {
 		super(webView);
 	}
 
+	private boolean isClose = false;
+
 	public void jsmethod_open(UZModuleContext moduleContext) {
+		this.isClose = moduleContext.optBoolean("isClose");
 		if (mChatBoxLayout == null) {
 			initParams(moduleContext);
-			createViews();
-			//初始化自定义表情；
+			createViews(moduleContext);
+			// 初始化自定义表情；
 			initEmotions();
 			initExtras();
-			initViews();
-			//设置编辑框的监听;
+			initViews(moduleContext);
+			initBorder(moduleContext, mEditLayout);
+			// 设置编辑框的监听;
 			setLayoutListener(mEditText);
 		} else {
 			mChatBoxLayout.setVisibility(View.VISIBLE);
 		}
+
+		mEditLayout.setPadding(mEditLayout.getPaddingLeft(),
+				mJsParamsUtil.inputBoxTopMargin(moduleContext),
+				mEditLayout.getPaddingRight(), mEditLayout.getPaddingBottom());
+		int leftMargin = mJsParamsUtil.inputBarTextMarginLeft(moduleContext);
+		mEditText.setPadding(leftMargin, ChatBoxEditText.DEFAULT_PADDING,
+				ChatBoxEditText.DEFAULT_PADDING,
+				ChatBoxEditText.DEFAULT_PADDING);
+
+		if (moduleContext.optBoolean("disableSendMessage")) {
+			mEditText.setEnabled(false);
+			mRecordBtn.setEnabled(false);
+			mSpeechBtn.setEnabled(false);
+			mFaceBtn.setEnabled(false);
+			mExstraBtn.setEnabled(false);
+		}
+
 	}
 
 	@SuppressWarnings("deprecation")
@@ -175,12 +202,19 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mShowExtrasCallBack = null;
 			mValueChangeCallBack = null;
 		}
+
+		if (coverLayout != null) {
+			removeViewFromCurWindow(coverLayout);
+		}
 	}
 
 	public void jsmethod_hide(UZModuleContext moduleContext) {
 		if (mChatBoxLayout != null) {
 			mChatBoxLayout.setVisibility(View.GONE);
 			mSpaceView.setVisibility(View.GONE);
+			if (coverLayout != null) {
+				coverLayout.setVisibility(View.GONE);
+			}
 		}
 	}
 
@@ -188,6 +222,10 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		if (mChatBoxLayout != null) {
 			mChatBoxLayout.setVisibility(View.VISIBLE);
 			mSpaceView.setVisibility(View.VISIBLE);
+			if (coverLayout != null) {
+				coverLayout.setVisibility(View.VISIBLE);
+			}
+
 		}
 	}
 
@@ -209,8 +247,10 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mTableLayout.setVisibility(View.GONE);
 		}
 	}
+
 	/***
 	 * 键盘的弹出与显示;
+	 * 
 	 * @param moduleContext
 	 */
 	public void jsmethod_popupKeyboard(UZModuleContext moduleContext) {
@@ -221,10 +261,18 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	public void jsmethod_closeKeyboard(UZModuleContext moduleContext) {
 		if (mChatBoxLayout != null) {
-			hideInputMethod(mContext.getCurrentFocus());
-			mTableLayout.setVisibility(View.GONE);
+			new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					hideInputMethod(((Activity) context()).getCurrentFocus());
+					mTableLayout.setVisibility(View.GONE);
+					resetBtn();
+				}
+			}, 300);
+
 		}
 	}
+
 	/***
 	 * 获取或设置聊天输入框的内容
 	 */
@@ -260,14 +308,24 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mEditText.getText().insert(index, insertMsg);
 		}
 	}
-	
+
+	public void jsmethod_switchInputArea(UZModuleContext uzContext) {
+
+	}
+
+	public void jsmethod_setSwitchBtnIcon(UZModuleContext uzContext) {
+
+	}
+
 	/***
 	 * 
 	 * @param moduleContext
 	 */
+	private UZModuleContext mRecordCanceledContext;
 
 	public void jsmethod_addEventListener(UZModuleContext moduleContext) {
-		//输入框的监听以及目标；
+
+		// 输入框的监听以及目标；
 		String target = mJsParamsUtil.listenerTarget(moduleContext);
 		String name = mJsParamsUtil.listenerName(moduleContext);
 		if (target.equals("inputBar")) {
@@ -284,25 +342,22 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			} else if (name.equals("valueChanged")) {
 				mValueChangeCallBack = moduleContext;
 			}
-			
-		//语音处的操作；
+
+			// 语音处的操作；
 		} else if (target.equals("recordBtn")) {
-			//按下录音；
+			// 按下录音；
 			if (name.equals("press")) {
 				mPressCallBack = moduleContext;
 			} else if (name.equals("press_cancel")) {
-				
 				mPressCancelCallBack = moduleContext;
 			} else if (name.equals("move_out")) {
-				
-				
 				mMoveOutCallBack = moduleContext;
 			} else if (name.equals("move_out_cancel")) {
-				
-				
 				mMoveOutCancelCallBack = moduleContext;
 			} else if (name.equals("move_in")) {
 				mMoveInCallBack = moduleContext;
+			} else if (name.equals("recordCanceled")) {
+				mRecordCanceledContext = moduleContext;
 			}
 		}
 	}
@@ -317,7 +372,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	private void initParams(UZModuleContext moduleContext) {
 		mModuleContext = moduleContext;
-		mBitmapUtils = new BitmapUtils(getWidgetInfo(), mContext);
+		mBitmapUtils = new BitmapUtils(getWidgetInfo(), context());
 		mJsParamsUtil = JsParamsUtil.getInstance();
 		mEmotionMap = new HashMap<String, String>();
 		mInsertEmotionMap = new HashMap<String, String>();
@@ -332,21 +387,39 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		isOnlySendBtnExist = !isBtnShow("extrasBtn");
 	}
 
-	private void createViews() {
-		mSpaceView = new View(mContext);
-		mChatBoxLayout = new ChatBoxLayout(mContext);
+	@SuppressLint("NewApi")
+	private void createViews(final UZModuleContext moduleContext) {
+		mSpaceView = new View(context());
+		mChatBoxLayout = new ChatBoxLayout(context());
+
 		mChatBoxLayout.setUiChatBox(this);
-		mEditLayout = new InputLinearLayout(mContext);
-		mTableLayout = new RelativeLayout(mContext);
-		mEditText = new ChatBoxEditText(mContext);
-		mRecordBtn = new Button(mContext);
-		mSpeechBtn = new ImageView(mContext);
-		mFaceBtn = new ImageView(mContext);
-		mSendLayout = new FrameLayout(mContext);
-		mExstraBtn = new ImageView(mContext);
-		mFaceViewPager = new ViewPager(mContext);
-		mExtraViewPager = new ViewPager(mContext);
-		mIndictorView = new IndictorView(mContext);
+		mEditLayout = new InputLinearLayout(context());
+		mTableLayout = new RelativeLayout(context());
+		mEditText = new ChatBoxEditText(context());
+		mRecordBtn = new Button(context());
+		mSpeechBtn = new ImageView(context());
+		mFaceBtn = new ImageView(context());
+		mSendLayout = new FrameLayout(context());
+		mExstraBtn = new ImageView(context());
+		mFaceViewPager = new ViewPager(context());
+		mExtraViewPager = new ViewPager(context());
+		mIndictorView = new IndictorView(context());
+		mRecordPanel = new RelativeLayout(context());
+
+		mRecordPanel.setClickable(true);
+		addRecordBtnToPanel(mRecordPanel);
+
+	}
+
+	public void callbackForBarHeight(UZModuleContext uzContext,
+			int inputBarHeight) {
+		JSONObject ret = new JSONObject();
+		try {
+			ret.put("inputBarHeight", inputBarHeight);
+			uzContext.success(ret, false);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void initIndictorView(int pointNums) {
@@ -366,7 +439,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		int normalColor = mJsParamsUtil.indicatorColor(mModuleContext);
 		int activeColor = mJsParamsUtil.indicatorActiveColor(mModuleContext);
 		int w = (2 * pointNums - 1) * UZUtility.dipToPix(3) * 2;
-		int screenWidth = mJsParamsUtil.getScreenWidth(mContext);
+		int screenWidth = mJsParamsUtil.getScreenWidth((Activity) context());
 		int startX = (int) (screenWidth / 2.0 - w / 2.0);
 		mIndictorView.initParams(pointNums, startX, normalColor, activeColor);
 		mIndicatorTarget = mJsParamsUtil.indicatorTarget(mModuleContext);
@@ -387,22 +460,26 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mIndictorView.setVisibility(View.GONE);
 		}
 	}
-	//初始化表情；
+
+	// 初始化表情；
 	private void initEmotions() {
-		//获取到自定义表情文件夹路径；由外部传入的；
+		// 获取到自定义表情文件夹路径；由外部传入的；
 		mEmotionsPath = mJsParamsUtil.emotionPath(mModuleContext);
-		//widget://image/emotion
-		/**添加判断代码表示:没有传入传入emotionPath时直接退出初始化表情库的方法**/
+		// widget://image/emotion
+		/** 添加判断代码表示:没有传入传入emotionPath时直接退出初始化表情库的方法 **/
 		int jsonNameIndex = mEmotionsPath.lastIndexOf('/') + 1;
-		//截取表情文件夹的名字；
+		// 截取表情文件夹的名字；
 		String jsonName = mEmotionsPath.substring(jsonNameIndex);
-		//真正的路径；
+		// 真正的路径；
 		String realPath = makeRealPath(mEmotionsPath + "/" + jsonName + ".json");
 		String emotionsStr = mJsParamsUtil.parseJsonFile(realPath);
 		parseEmotionJson(emotionsStr);
 		initFaceViewPager();
 	}
 
+	/***
+	 * 初始化附加功能处显示的适配器;
+	 */
 	private void initExtras() {
 		mExtraParams = mJsParamsUtil.extras(mModuleContext);
 		if (mExtraParams != null) {
@@ -411,12 +488,21 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		}
 	}
 
+	/***
+	 * 附加功能区的创建适配器;
+	 * 
+	 * @param moduleContext
+	 */
+	@SuppressWarnings("deprecation")
 	private void setExtraAdapter(UZModuleContext moduleContext) {
 		ExtraPagerAdapter expandMyPagerAdapter = createExtraAdapter(moduleContext);
 		mExtraViewPager.setAdapter(expandMyPagerAdapter);
 		mExtraViewPager.setOnPageChangeListener(this);
 	}
 
+	/***
+	 * 设置页数;
+	 */
 	private void setExtraPageNums() {
 		int size = mExtraParams.size();
 		int pageSize = 8;
@@ -426,12 +512,18 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	}
 
 	private ExtraPagerAdapter createExtraAdapter(UZModuleContext moduleContext) {
-		//轮播器背景色;
-		int bgColor = mJsParamsUtil.inputBarBgColor(moduleContext);
-		return new ExtraPagerAdapter(this, mExtraParams, mContext,
+		// 附加功能区显示背景颜色;
+		int bgColor = mJsParamsUtil.inputBoxBoardBgColor(mModuleContext);
+		// int bgColor = mJsParamsUtil.inputBarBgColor(moduleContext);
+		return new ExtraPagerAdapter(this, mExtraParams, context(),
 				mExtraViewPager, moduleContext, bgColor);
 	}
 
+	/***
+	 * 解析表情文件;
+	 * 
+	 * @param emotionsStr
+	 */
 	private void parseEmotionJson(String emotionsStr) {
 		if (emotionsStr != null && !TextUtils.isEmpty(emotionsStr)) {
 			try {
@@ -443,9 +535,9 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 					String name = mEmotionsPath + "/" + nameStr + ".png";
 					String text = jsonObject.optString("text");
 					mEmotionMap.put(name, text);
-					//表情的文本信息;
+					// 表情的文本信息;
 					mInsertEmotionMap.put(text, name);
-					//表情的名字;
+					// 表情的名字;
 					mEmotionsList.add(name);
 				}
 			} catch (JSONException e) {
@@ -460,15 +552,20 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		setFaceAdapter();
 	}
 
+	@SuppressWarnings("deprecation")
 	private void setFaceAdapter() {
+		// 表情的适配器;
 		FacePagerAdapter adapter = createFacePageAdapter();
 		mFaceViewPager.setAdapter(adapter);
 		mFaceViewPager.setOnPageChangeListener(this);
 	}
 
+	// 创建表情的适配器的方法;
 	private FacePagerAdapter createFacePageAdapter() {
-		int bgColor = mJsParamsUtil.inputBarBgColor(mModuleContext);
-		return new FacePagerAdapter(mContext, mEmotionsList, mBitmapUtils,
+		// 获取传入表情面板的颜色值;
+
+		int bgColor = mJsParamsUtil.inputBoxBoardBgColor(mModuleContext);
+		return new FacePagerAdapter(context(), mEmotionsList, mBitmapUtils,
 				this, bgColor);
 	}
 
@@ -498,30 +595,30 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		initIndictorView(pageNums);
 	}
 
-	private void initViews() {
+	private void initViews(UZModuleContext uzContext) {
 		initInputAreaView();
-		initTableLayout();
+		initTableLayout(uzContext);
 		initChatBoxLayout();
 		insertSpaceView();
 		insertCahtBoxLayout();
 	}
 
 	private void initInputAreaView() {
-		//左侧图标；
+		// 左侧图标；
 		initSpeechBtn();
-		//录音button
+		// 录音button
 		initRecordBtn();
-		//输入框；
+		// 输入框；
 		initEditText();
-		//表情按钮图标；
+		// 表情按钮图标；
 		initFaceBtn();
-		//发送按钮图标；
+		// 发送按钮图标；
 		initSendBtn();
-		//额外按钮；
+		// 额外按钮；
 		initExtraBtn();
-		//发送的布局；
+		// 发送的布局；
 		initSendLayout();
-		//初始化编辑区的布局；
+		// 初始化编辑区的布局；
 		initEditLayout();
 	}
 
@@ -532,15 +629,17 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		Constans.INPUT_BOX_BORDER_COLOR = borderColor;
 		int bgColor = mJsParamsUtil.inputBoxBgColor(mModuleContext);
 		Constans.INPUT_BOX_BG_COLOR = bgColor;
+		Constans.INPUT_BOX_CORNER = mJsParamsUtil
+				.inputBoxBorderCorner(mModuleContext);
 	}
 
 	private void initSendBtnAnimations() {
 		int showAnimaId = UZResourcesIDFinder.getResAnimID("unzoom_in");
-		mSendBtnShowAnimation = AnimationUtils.loadAnimation(mContext,
+		mSendBtnShowAnimation = AnimationUtils.loadAnimation(context(),
 				showAnimaId);
 		mSendBtnShowAnimation.setAnimationListener(this);
 		int hideAnimaId = UZResourcesIDFinder.getResAnimID("unzoom_out");
-		mSendBtnHideAnimation = AnimationUtils.loadAnimation(mContext,
+		mSendBtnHideAnimation = AnimationUtils.loadAnimation(context(),
 				hideAnimaId);
 		mSendBtnHideAnimation.setAnimationListener(this);
 	}
@@ -555,8 +654,10 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				return false;
 			}
 		});
+
 		String fixedOn = mModuleContext.optString("fixedOn");
 		insertViewToCurWindow(mSpaceView, spaceViewLayout(), fixedOn);
+
 	}
 
 	private RelativeLayout.LayoutParams spaceViewLayout() {
@@ -565,14 +666,24 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				RelativeLayout.LayoutParams.MATCH_PARENT);
 	}
 
+	/***
+	 * 这里是点击非键盘区域的事件监听;
+	 */
 	@SuppressWarnings("deprecation")
 	private void onSpaceViewClick() {
 		mTableLayout.setVisibility(View.GONE);
 		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
-		if (mContext != null) {
-			hideInputMethod(mContext.getCurrentFocus());
+		mExstraBtn.setBackgroundDrawable(bgDrawable);
+		if (context() != null) {
+			hideInputMethod(((Activity) context()).getCurrentFocus());
+		}
+
+		if (isClose) {
+			jsmethod_close(mModuleContext);
 		}
 	}
+
+	private LinearLayout coverLayout;
 
 	private void insertCahtBoxLayout() {
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
@@ -580,8 +691,29 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				RelativeLayout.LayoutParams.WRAP_CONTENT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		mChatBoxLayout.setOrientation(LinearLayout.VERTICAL);
-		String fixedOn = mModuleContext.optString("fixedOn");
+		final String fixedOn = mModuleContext.optString("fixedOn");
+
 		insertViewToCurWindow(mChatBoxLayout, params, fixedOn);
+
+		if (mModuleContext.optBoolean("disableSendMessage")) {
+			mChatBoxLayout.post(new Runnable() {
+				@Override
+				public void run() {
+
+					coverLayout = new LinearLayout(context());
+					coverLayout.setBackgroundColor(0x88000000);
+
+					RelativeLayout.LayoutParams coverParams = new RelativeLayout.LayoutParams(
+							RelativeLayout.LayoutParams.MATCH_PARENT,
+							UZCoreUtil.pixToDip(mChatBoxLayout
+									.getMeasuredHeight()));
+
+					coverParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+					insertViewToCurWindow(coverLayout, coverParams, fixedOn);
+				}
+
+			});
+		}
 	}
 
 	private void autoFocus() {
@@ -590,14 +722,39 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	}
 
 	private void initChatBoxLayout() {
+		mChatBoxLayout.setWillNotDraw(false);
 		mChatBoxLayout.addView(mEditLayout);
 		mChatBoxLayout.addView(mTableLayout);
 		autoFocus();
 	}
 
+	public void initBorder(UZModuleContext uzContext,
+			InputLinearLayout inputLayout) {
+		JSONObject stylesObj = uzContext.optJSONObject("styles");
+		if (stylesObj != null) {
+			JSONObject topDividerObj = stylesObj.optJSONObject("topDivider");
+			if (topDividerObj != null) {
+				String borderColor = topDividerObj.optString("color", "#000");
+				int width = UZUtility.dipToPix(topDividerObj.optInt("width"));
+				inputLayout.setTopBorderHeight(width);
+
+				String realPath = uzContext.makeRealPath(borderColor);
+				Bitmap borderBmp = UZUtility.getLocalImage(realPath);
+				if (borderBmp != null) {
+					inputLayout.setTopBorderBitmap(borderBmp);
+				} else {
+					inputLayout.setTopBorderColor(UZUtility
+							.parseCssColor(borderColor));
+				}
+			}
+		}
+	}
+
 	private void initEditLayout() {
 		LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.WRAP_CONTENT);
+
+		params.gravity = Gravity.CENTER_VERTICAL;
 		mEditLayout.setOrientation(LinearLayout.HORIZONTAL);
 		mEditLayout.setLayoutParams(params);
 		mEditLayout.addView(mSpeechBtn);
@@ -612,65 +769,111 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private void initEditLayoutColors() {
 		int bgColor = mJsParamsUtil.inputBarBgColor(mModuleContext);
 		mEditLayout.setBackgroundColor(bgColor);
+		mEditText.setTextColor(mJsParamsUtil.inputTextColor(mModuleContext));
+		mEditText.setTextSize(mJsParamsUtil.inputTextSize(mModuleContext));
 	}
 
-	private void initTableLayout() {
+	private boolean mIsCenterDisplay = false;
+
+	private void initTableLayout(UZModuleContext uzContext) {
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
 				RelativeLayout.LayoutParams.MATCH_PARENT,
 				UZUtility.dipToPix(50) * 4 + UZUtility.dipToPix(20));
+
+		params.addRule(RelativeLayout.CENTER_VERTICAL);
+
 		mTableLayout.setLayoutParams(params);
 		mTableLayout.setVisibility(View.GONE);
 		mTableLayout.addView(mFaceViewPager);
 		mTableLayout.addView(mExtraViewPager);
 		mTableLayout.addView(mIndictorView);
+
+		// TODO start
+		JSONObject extrasObj = uzContext.optJSONObject("extras");
+		if (extrasObj != null && extrasObj.optBoolean("isCenterDisplay")) {
+			mIsCenterDisplay = true;
+			generateData();
+			CenterExtraPagerAdapter centerExtraAdapter = new CenterExtraPagerAdapter(
+					uzContext, context(), pageDatas);
+			mExtraViewPager.setAdapter(centerExtraAdapter);
+		}
+		// TODO end
+
+		int match_parent = RelativeLayout.LayoutParams.MATCH_PARENT;
+		mRecordPanel.setLayoutParams(new RelativeLayout.LayoutParams(
+				match_parent, match_parent));
+		mTableLayout.addView(mRecordPanel);
+
 		int bgColor = mJsParamsUtil.inputBarBgColor(mModuleContext);
 		mTableLayout.setBackgroundColor(bgColor);
-		mFaceViewPager.setBackgroundColor(UZUtility.parseCssColor("#00FF00"));
-		mExtraViewPager.setBackgroundColor(UZUtility.parseCssColor("#00FF00"));
+
+	}
+
+	private ArrayList<PageData> pageDatas = new ArrayList<PageData>();
+
+	public void generateData() {
+		PageData pageData = null;
+		for (int i = 0; i < mExtraParams.size(); i++) {
+
+			String imgPath = mExtraParams.get(i).getNomal();
+			if (TextUtils.isEmpty(imgPath)) {
+				imgPath = mExtraParams.get(i).getPress();
+			}
+
+			if (i % 2 == 0) {
+				pageData = new PageData();
+				pageData.extraDatas.add(new ExtraData(imgPath, mExtraParams
+						.get(i).getTitle()));
+				pageDatas.add(pageData);
+			} else {
+				pageData.extraDatas.add(new ExtraData(imgPath, mExtraParams
+						.get(i).getTitle()));
+			}
+		}
 	}
 
 	private void initSpeechBtn() {
-		//将dip单位的数值转为当前设备的绝对像素值.该函数会根据当前设备的屏幕密度进行换算
+		// 将dip单位的数值转为当前设备的绝对像素值.该函数会根据当前设备的屏幕密度进行换算
 		LayoutParams params = new LayoutParams(
 				UZUtility.dipToPix(Constans.BTN_SIZE),
 				UZUtility.dipToPix(Constans.BTN_SIZE));
 		params.gravity = Gravity.BOTTOM;
 		int margin = UZUtility.dipToPix(Constans.INPUT_BOX_MARGIN);
 		params.setMargins(margin, margin, margin, margin);
-		//设置imageview的位置；
+		// 设置imageview的位置；
 		mSpeechBtn.setLayoutParams(params);
-		
+
 		initSpeechBtnVisible();
 		initSpeechBtnBg();
-		//最左侧的切换图片；
-		//设置点击监听；
+		// 最左侧的切换图片；
+		// 设置点击监听；
 		mSpeechBtn.setOnClickListener(this);
 	}
-	
+
 	private void initSpeechBtnVisible() {
-		//没有传入左侧图标图片时，隐藏imageview；
+		// 没有传入左侧图标图片时，隐藏imageview；
 		if (!isBtnShow("speechBtn")) {
-	
+
 			mSpeechBtn.setVisibility(View.GONE);
 		}
-	
+
 	}
 
 	@SuppressWarnings("deprecation")
 	private void initSpeechBtnBg() {
 		// style /speechBtn 节点下的 normalImg 的url;
 		String normalStr = mJsParamsUtil.speechBtnNormalImg(mModuleContext);
-		//URL生成图片；
+		// URL生成图片；
 		BitmapDrawable normal = createDrawable(normalStr, null);
-		
-		//按下后的图片url,目前接口中没有用到；
+
+		// 按下后的图片url,目前接口中没有用到；
 		String activeStr = mJsParamsUtil.speechBtnActiveImg(mModuleContext);
-		
-		//按下URL生成图片；
+
+		// 按下URL生成图片；
 		BitmapDrawable active = createDrawable(activeStr, normal);
-		//说明外部传入值了，然后显示控件；
+		// 说明外部传入值了，然后显示控件；
 		if (normal != null) {
-			//设置状态选择器； 
+			// 设置状态选择器；
 			mSpeechBtnDrawable = createStateDrawable(normal, active);
 			mSpeechBtn.setBackgroundDrawable(mSpeechBtnDrawable);
 		}
@@ -710,9 +913,11 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		String normalBg = mJsParamsUtil.recordBtnNormalImg(mModuleContext);
 		String activeBg = mJsParamsUtil.recordBtnActiveImg(mModuleContext);
 		if (isBitmap(normalBg)) {
-			mRecordNoramlDrawable = new BitmapDrawable(mContext.getResources(),
+			mRecordNoramlDrawable = new BitmapDrawable(
+					context().getResources(),
 					mBitmapUtils.generateBitmap(normalBg));
-			mRecordActiveDrawable = new BitmapDrawable(mContext.getResources(),
+			mRecordActiveDrawable = new BitmapDrawable(
+					context().getResources(),
 					mBitmapUtils.generateBitmap(activeBg));
 		} else {
 			mRecordNoramlDrawable = new ColorDrawable(
@@ -733,6 +938,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				switch (action) {
 				case MotionEvent.ACTION_DOWN:
 					onRecordEventDown();
+
 					break;
 				case MotionEvent.ACTION_MOVE:
 					onRecordEventMove(event);
@@ -740,10 +946,12 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				case MotionEvent.ACTION_UP:
 					onRecordEventUp(event);
 					break;
+
 				default:
+					onRecordEventUp(event);
 					break;
 				}
-				return false;
+				return true;
 			}
 		});
 	}
@@ -786,11 +994,13 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private void recordEventBack(String eventName) {
 		if (eventName.equals("press")) {
 			if (mPressCallBack != null) {
-				mPressCallBack.success(null, false);
+				JSONObject ret = new JSONObject();
+				mPressCallBack.success(ret, false);
 			}
 		} else if (eventName.equals("press_cancel")) {
 			if (mPressCancelCallBack != null) {
-				mPressCancelCallBack.success(null, false);
+				JSONObject ret = new JSONObject();
+				mPressCancelCallBack.success(ret, false);
 			}
 		} else if (eventName.equals("move_out")) {
 			if (mMoveOutCallBack != null) {
@@ -808,14 +1018,19 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	}
 
 	private boolean isTouchInRecordBtn(MotionEvent event) {
-		float x = event.getX();
-		float y = event.getY();
+		float x = event.getRawX();
+		float y = event.getRawY();
+
 		int[] location = new int[2];
 		mRecordBtn.getLocationOnScreen(location);
 		int viewX = location[0];
+		int viewY = location[1];
+
 		float viewWidth = mRecordBtn.getWidth();
 		float viewHeight = mRecordBtn.getHeight();
-		if (x <= viewX + viewWidth && x >= viewX && y <= viewHeight && y >= 0) {
+
+		if (x <= viewX + viewWidth && x >= viewX && y <= viewY + viewHeight
+				&& y >= viewY) {
 			return true;
 		}
 		return false;
@@ -860,9 +1075,31 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	@SuppressWarnings("deprecation")
 	private void initEditColors() {
 		GradientDrawable gradientDrawable = new GradientDrawable();
-		gradientDrawable.setColor(Color.WHITE);
-		gradientDrawable.setCornerRadius(Constans.INPUT_BOX_CORNER);
+		gradientDrawable.setColor(Constans.INPUT_BOX_BG_COLOR);
+
+		int borderCorner = mJsParamsUtil.inputBoxBorderCorner(mModuleContext);
+		gradientDrawable.setCornerRadius(borderCorner);
+		gradientDrawable.setStroke(UZUtility.dipToPix(1),
+				Constans.INPUT_BOX_BORDER_COLOR);
+
+		// ui
 		mEditText.setBackgroundDrawable(gradientDrawable);
+
+		String leftIconPath = mJsParamsUtil
+				.inputBoxLeftIconPath(mModuleContext);
+		int leftIconSize = mJsParamsUtil.inputBoxLeftIconSize(mModuleContext);
+		Bitmap leftBmp = generateBmp(UZUtility.getLocalImage(leftIconPath),
+				leftIconSize);
+		if (leftBmp != null) {
+			mEditText.setLeftIcon(leftBmp);
+		}
+	}
+
+	public Bitmap generateBmp(Bitmap sourceBmp, int size) {
+		if (sourceBmp == null) {
+			return null;
+		}
+		return Bitmap.createScaledBitmap(sourceBmp, size, size, true);
 	}
 
 	@SuppressLint("ClickableViewAccessibility")
@@ -880,14 +1117,15 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private void initFaceBtn() {
 		initFaceBtnLayout();
 		initFaceBtnBg();
-		//右侧添加的表情；
+		// 右侧添加的表情；
 		mFaceBtn.setOnClickListener(this);
 	}
+
 	/***
 	 * 设置控件的位置；
 	 */
 	private void initFaceBtnLayout() {
-		//创建布局位置，将控件放入其中；
+		// 创建布局位置，将控件放入其中；
 		LayoutParams params = new LayoutParams(
 				UZUtility.dipToPix(Constans.BTN_SIZE),
 				UZUtility.dipToPix(Constans.BTN_SIZE));
@@ -899,59 +1137,66 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	@SuppressWarnings("deprecation")
 	private void initFaceBtnBg() {
-		
-		//xml自带的一个表情图标；获取到他的int值；
-		//默认的表情图标；
+
+		// xml自带的一个表情图标；获取到他的int值；
+		// 默认的表情图标；
 		int faceBtnImgId = UZResourcesIDFinder
 				.getResDrawableID("mo_uichatbox_face_btn");
-		//将默认图片生成一张bitmap图片；
+		// 将默认图片生成一张bitmap图片；
 		BitmapDrawable defaultValue = createDrawable(faceBtnImgId);
-		//获取到传进来的显示表情样式图片url；
+		// 获取到传进来的显示表情样式图片url；
 		String normalImgStr = mJsParamsUtil.faceBtnNormalImg(mModuleContext);
-		//说明没有传入值；隐藏图标；
-		if(normalImgStr==null){
+		// 说明没有传入值；隐藏图标；
+		if (normalImgStr == null) {
 			mFaceBtn.setVisibility(View.GONE);
-			
-			//状态选择器添加默认的bitmap；
+
+			// 状态选择器添加默认的bitmap；
 			mFaceBtnDrawable = createStateDrawable(defaultValue, defaultValue);
-		}else{
-			
+		} else {
+
 			BitmapDrawable normal = createDrawable(normalImgStr, defaultValue);
-			String activeImgStr = mJsParamsUtil.faceBtnActiveImg(mModuleContext);
-			
+			String activeImgStr = mJsParamsUtil
+					.faceBtnActiveImg(mModuleContext);
+
 			BitmapDrawable active = createDrawable(activeImgStr, normal);
-			//设置状态选择器
+			// 设置状态选择器
 			mFaceBtnDrawable = createStateDrawable(normal, active);
 		}
 		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
-		//开启键盘面板的view
+		// 开启键盘面板的view
 		initKeyboardDrawable();
 	}
+
 	/***
 	 * 键盘按钮样式的数据；
 	 */
 	private void initKeyboardDrawable() {
-		//封装模块中自带的键盘图标；
-		int keyboardBtnImgId = UZResourcesIDFinder.getResDrawableID("mo_uichatbox_keyboard_btn");
-		//转换成bitmap图片；
+		// 封装模块中自带的键盘图标；
+		int keyboardBtnImgId = UZResourcesIDFinder
+				.getResDrawableID("mo_uichatbox_keyboard_btn");
+		// 转换成bitmap图片；
 		BitmapDrawable defaultValue = createDrawable(keyboardBtnImgId);
-		//js传入的数据；
+		// js传入的数据；
 		String normalStr = mJsParamsUtil.keyboardBtnNormalImg(mModuleContext);
-/**---------------------------------------------------------------------***/
-		if(normalStr == null){
+		/**
+		 * ---------------------------------------------------------------------
+		 ***/
+		if (normalStr == null) {
 			mSpeechKeyDrawable = createStateDrawable(defaultValue, defaultValue);
-			//状态选择器都添加默认图片；
-			mKeyboardBtnDrawable = createStateDrawable(defaultValue, defaultValue);
-			
-		}else{
+			// 状态选择器都添加默认图片；
+			mKeyboardBtnDrawable = createStateDrawable(defaultValue,
+					defaultValue);
+
+		} else {
 			BitmapDrawable normal = createDrawable(normalStr, defaultValue);
-			//js传入按下的图标；
-			String activeStr = mJsParamsUtil.keyboardBtnActiveImg(mModuleContext);
+			// js传入按下的图标；
+			String activeStr = mJsParamsUtil
+					.keyboardBtnActiveImg(mModuleContext);
 			BitmapDrawable active = createDrawable(activeStr, normal);
 			mKeyboardBtnDrawable = createStateDrawable(normal, active);
 			mSpeechKeyDrawable = createStateDrawable(normal, normal);
 		}
-		
+
 	}
 
 	private void initExtraBtn() {
@@ -978,12 +1223,15 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	@SuppressWarnings("deprecation")
 	private void initExtraBtnBg() {
+		// 获取到额外接口传进来的站位图;
 		String normalStr = mJsParamsUtil.extrasBtnNormalImg(mModuleContext);
+		// 非点击状态下;
 		BitmapDrawable normal = createDrawable(normalStr, null);
 		String activeStr = mJsParamsUtil.extrasBtnActiveImg(mModuleContext);
+		// 点击状态下;
 		BitmapDrawable active = createDrawable(activeStr, normal);
 		if (normal != null) {
-			StateListDrawable bgDrawable = createStateDrawable(normal, active);
+			bgDrawable = createStateDrawable(normal, active);
 			mExstraBtn.setBackgroundDrawable(bgDrawable);
 		}
 	}
@@ -1020,49 +1268,58 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	}
 
 	public void showKeybord() {
-		mEditText.requestFocus();
-		InputMethodManager inputManager = (InputMethodManager) mEditText
-				.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		inputManager.showSoftInput(mEditText, 0);
+
+		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				mEditText.setFocusable(true);
+				mEditText.setFocusableInTouchMode(true);
+				mEditText.requestFocus();
+				InputMethodManager inputManager = (InputMethodManager) mEditText
+						.getContext().getSystemService(
+								Context.INPUT_METHOD_SERVICE);
+				inputManager.showSoftInput(mEditText, 0);
+			}
+		}, 100);
 	}
 
 	private void hideInputMethod(View view) {
-		if (mContext != null && view != null) {
-			InputMethodManager mInputMethodManager = (InputMethodManager) mContext
+		isShowExtra = false;
+		if (context() != null && view != null) {
+			InputMethodManager mInputMethodManager = (InputMethodManager) context()
 					.getSystemService(Context.INPUT_METHOD_SERVICE);
 			if (mInputMethodManager != null)
 				mInputMethodManager.hideSoftInputFromWindow(
 						view.getWindowToken(), 0);
 		}
 	}
-	//判断图片有没有传进来
+
+	// 判断图片有没有传进来
 	private boolean isBtnShow(String btnName) {
-		
+
 		JSONObject btnJson = mJsParamsUtil.innerParamJSONObject(mModuleContext,
 				"styles", btnName);
-		//表示左侧的图片没有传入；
+		// 表示左侧的图片没有传入；
 		if (btnJson == null) {
-			
 			return false;
 		}
-		
 		return true;
 	}
-	
-	//创建一个bitmap图；
+
+	// 创建一个bitmap图；
 
 	private BitmapDrawable createDrawable(String imgPath,
 			BitmapDrawable defaultValue) {
 		String realPath = makeRealPath(imgPath);
 		Bitmap bitmap = mJsParamsUtil.getBitmap(realPath);
 		if (bitmap != null) {
-			return new BitmapDrawable(mContext.getResources(), bitmap);
+			return new BitmapDrawable(context().getResources(), bitmap);
 		}
 		return defaultValue;
 	}
 
 	private BitmapDrawable createDrawable(int resId) {
-		Resources resources = mContext.getResources();
+		Resources resources = context().getResources();
 		Drawable drawable = resources.getDrawable(resId);
 		return (BitmapDrawable) drawable;
 	}
@@ -1074,7 +1331,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		sd.addState(new int[] {}, nomalDrawable);
 		return sd;
 	}
-	
+
 	/***
 	 * 点击事件的处理方法；
 	 */
@@ -1082,47 +1339,94 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	@Override
 	public void onClick(View v) {
 		if (v == mSpeechBtn) {
-			//最左侧的按钮
+
+			// 最左侧的按钮
 			onSpeechBtnClick();
 			clickCallBack("showRecord");
 		} else if (v == mFaceBtn) {
-			//右侧表情按钮；
+			isShowExtra = false;
+			// 右侧表情按钮；
 			onFaceBtnClick();
 			clickCallBack("showEmotion");
 		} else if (v == mExstraBtn) {
+
+			// 额外按钮的点击事件;
 			onExtraBtnClick();
 			clickCallBack("showExtras");
-			//点击发送的按钮;
+			// 点击发送的按钮;.
+
 		} else if (v == mSendBtn && mSendBtn instanceof Button) {
 			onSendBtnClick();
 		}
 	}
+
 	/***
 	 * 发送按钮的点击事件;
 	 */
 	private void onSendBtnClick() {
-		
+
 		openCallBack("send", 0);
-		//这里面应该添加判读控制面板是否可见以前来控制change 监听的控制面板的问题;
+		// 这里面应该添加判读控制面板是否可见以前来控制change 监听的控制面板的问题;
 		mEditText.setText("");
+
 	}
+
+	/****
+	 * 额外按钮的点击事件;
+	 */
+
+	private boolean isShowExtra = false;
 
 	@SuppressWarnings("deprecation")
 	private void onExtraBtnClick() {
-		if (isViewVisible(mRecordBtn)) {
-			mRecordBtn.setVisibility(View.GONE);
-			mSpeechBtn.setBackgroundDrawable(mSpeechBtnDrawable);
-			mEditText.setVisibility(View.VISIBLE);
+		if (isShowExtra) {
+			isShowExtra = false;
+			clickExtraBtnChangeHide();
+			return;
 		}
-		if (!isViewVisible(mTableLayout)) {
+
+		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
+
+		// 判断发送的按钮是否可见;
+		if (isViewVisible(mRecordBtn)) {
+			// 可见隐藏掉发送按钮;
+			mRecordBtn.setVisibility(View.GONE);
+			// 设置最左侧键盘和语音按钮切换的图标;
+			mSpeechBtn.setBackgroundDrawable(mSpeechBtnDrawable);
+			// 显示输入框;
+			mEditText.setVisibility(View.VISIBLE);
+
+			// ======= debug ======
 			clickExtraBtnShowTable();
 			setExtraPageNums();
+			// ======= debug ======
+			isShowExtra = true;
+
 		} else {
-			clickExtraBtnChangeToExtra();
+			// ====== debug ======
+			clickExtraBtnShowTable();
 			setExtraPageNums();
+			isShowExtra = true;
+			// ====== debug ======
 		}
 	}
-	//判断view是否可见；
+
+	/***
+	 * 隐藏额外面板不显示;
+	 */
+	@SuppressWarnings("deprecation")
+	private void clickExtraBtnChangeHide() {
+
+		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
+		isKeyBoardVisible = true;
+		mEditText.requestFocus();
+		isCallBack = false;
+		mTableLayout.setVisibility(View.GONE);
+		mDelayedHandler.postDelayed(mDelayedShowKeyBoardRunnable, 300);
+
+	}
+
+	// 判断view是否可见；
 	private boolean isViewVisible(View view) {
 		if (view.getVisibility() == View.VISIBLE) {
 			return true;
@@ -1130,9 +1434,20 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		return false;
 	}
 
+	@SuppressWarnings("deprecation")
 	private void showExtraTable() {
+		isKeyBoardVisible = false;
+		// mExstraBtn.setBackgroundDrawable(mKeyboardBtnDrawable);
+		mExstraBtn.setBackgroundDrawable(bgDrawable);
+		// 额外数据显示轮播器
 		mExtraViewPager.setVisibility(View.VISIBLE);
+		// 表情显示轮播器;
 		mFaceViewPager.setVisibility(View.GONE);
+		mRecordPanel.setVisibility(View.GONE);
+
+		resetBtn();
+
+		// 显示额外的panel;
 		chargeIndictorVisible("extrasPanel");
 		int pageNums = mExtraViewPager.getOffscreenPageLimit();
 		if (pageNums <= 1) {
@@ -1142,17 +1457,25 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		mIndictorView.setCurrentIndex(mExtraViewPager.getCurrentItem());
 	}
 
+	@SuppressWarnings("deprecation")
+	public void resetBtn() {
+		String recordType = JsParamsUtil.getInstance().getRecordType(
+				mModuleContext);
+		if ("pressRecord".equals(recordType)) {
+			return;
+		}
+		String normalImgStr = JsParamsUtil.getInstance().speechBtnNormalImg(
+				mModuleContext);
+		Bitmap normalImgBmp = UZUtility.getLocalImage(mModuleContext
+				.makeRealPath(normalImgStr));
+		mSpeechBtn.setBackgroundDrawable(new BitmapDrawable(normalImgBmp));
+	}
+
 	private void clickExtraBtnShowTable() {
 		showExtraTable();
 		isCallBack = false;
-		hideInputMethod(mContext.getCurrentFocus());
+		hideInputMethod(((Activity) context()).getCurrentFocus());
 		mDelayedHandler.postDelayed(mDelayedRunnable, 300);
-	}
-
-	@SuppressWarnings("deprecation")
-	private void clickExtraBtnChangeToExtra() {
-		showExtraTable();
-		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1161,44 +1484,219 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		mEditText.requestFocus();
 		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
 		mTableLayout.setVisibility(View.GONE);
+
+		resetBtn();
 	}
-	
+
 	/**
 	 * 当左侧图标被点击之后处理的触发事件；
 	 */
 
+	// TODO
 	private void onSpeechBtnClick() {
-		//表示录音按钮view不可见；
+
+		String recordType = JsParamsUtil.getInstance().getRecordType(
+				mModuleContext);
+
+		if ("recordPanel".equals(recordType)) {
+
+			if (mSpeechBtn.isSelected()) {
+				mSpeechBtn.setSelected(false);
+				hideRecordBtn();
+			} else {
+				mSpeechBtn.setSelected(true);
+				doRecordPanel();
+			}
+			return;
+		}
+
+		// 表示录音按钮view不可见；
 		if (!isViewVisible(mRecordBtn)) {
-			//让其进行可见；
+			// 让其进行可见；
 			showRecordBtn();
-			
-			
 		} else {
-			//进行隐藏；
+			// 进行隐藏；
 			hideRecordBtn();
+		}
+
+	}
+
+	@SuppressWarnings("deprecation")
+	private void doRecordPanel() {
+		mTableLayout.setVisibility(View.VISIBLE);
+		mRecordPanel.setVisibility(View.VISIBLE);
+		hideInputMethod(mEditText);
+		mFaceViewPager.setVisibility(View.GONE);
+		mExtraViewPager.setVisibility(View.GONE);
+		mIndictorView.setVisibility(View.GONE);
+
+		String activeImgStr = JsParamsUtil.getInstance().speechBtnActiveImg(
+				mModuleContext);
+		Bitmap activeImgBmp = UZUtility.getLocalImage(mModuleContext
+				.makeRealPath(activeImgStr));
+		mSpeechBtn.setBackgroundDrawable(new BitmapDrawable(activeImgBmp));
+	}
+
+	private boolean _moveOut = false;
+
+	@SuppressWarnings("deprecation")
+	private void addRecordBtnToPanel(RelativeLayout container) {
+
+		container.setBackgroundColor(Color.TRANSPARENT);
+		final ImageView recordBtn = new ImageView(context());
+		int btnW = JsParamsUtil.getInstance().getRecordWidth(mModuleContext);
+		int btnH = JsParamsUtil.getInstance().getRecordHeight(mModuleContext);
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+				btnW, btnH);
+		params.addRule(RelativeLayout.CENTER_IN_PARENT);
+		recordBtn.setLayoutParams(params);
+
+		String normalBg = JsParamsUtil.getInstance().getRecordNormalImage(
+				mModuleContext);
+		String activeBg = JsParamsUtil.getInstance().getRecordActiveImg(
+				mModuleContext);
+
+		final Bitmap normalImgBmp = UZUtility.getLocalImage(mModuleContext
+				.makeRealPath(normalBg));
+		final Bitmap activeImgBmp = UZUtility.getLocalImage(mModuleContext
+				.makeRealPath(activeBg));
+
+		container.addView(recordBtn);
+		recordBtn.setBackgroundDrawable(new BitmapDrawable(normalImgBmp));
+		recordBtn.setOnTouchListener(new View.OnTouchListener() {
+			@SuppressLint("ClickableViewAccessibility")
+			@Override
+			public boolean onTouch(View arg0, MotionEvent arg1) {
+				switch (arg1.getAction()) {
+				case MotionEvent.ACTION_DOWN:
+					_moveOut = false;
+					if (mPressCallBack != null) {
+						mPressCallBack.success(new JSONObject(), false);
+					}
+
+					recordBtn.setBackgroundDrawable(new BitmapDrawable(
+							activeImgBmp));
+					break;
+
+				case MotionEvent.ACTION_MOVE:
+					if (isOutterUp(arg1, arg0)) {
+						if (mMoveOutCallBack != null) {
+							if (_moveOut) {
+								return true;
+							}
+							mMoveOutCallBack.success(new JSONObject(), false);
+							_moveOut = true;
+						}
+					}
+
+					if (isInner(arg1, arg0)) {
+						if (!_moveOut) {
+							return true;
+						}
+						mMoveInCallBack.success(new JSONObject(), false);
+						_moveOut = false;
+					}
+					break;
+				case MotionEvent.ACTION_UP:
+					if (isOutterUp(arg1, arg0)) {
+						arg1.setAction(MotionEvent.ACTION_CANCEL);
+						return onTouch(arg0, arg1);
+					}
+					if (mPressCancelCallBack != null) {
+						mPressCancelCallBack.success(new JSONObject(), false);
+					}
+					recordBtn.setBackgroundDrawable(new BitmapDrawable(
+							normalImgBmp));
+					break;
+				case MotionEvent.ACTION_CANCEL:
+					if (mMoveOutCancelCallBack != null) {
+						mMoveOutCancelCallBack.success(new JSONObject(), false);
+					}
+					break;
+				}
+				return true;
+			}
+
+			private boolean isOutterUp(MotionEvent event, View v) {
+				float touchX = event.getX();
+				float touchY = event.getY();
+				float maxX = v.getWidth();
+				float maxY = v.getHeight();
+				return touchX < 0 || touchX > maxX || touchY < 0
+						|| touchY > maxY;
+			}
+
+			private boolean isInner(MotionEvent event, View v) {
+				float touchX = event.getX();
+				float touchY = event.getY();
+				float maxX = v.getWidth();
+				float maxY = v.getHeight();
+
+				if (touchX > 0 && touchX < maxX && touchY > 0 && touchY < maxY) {
+					return true;
+				}
+				return false;
+			}
+		});
+	}
+
+	public void callback(UZModuleContext uzContext, String eventType) {
+		JSONObject ret = new JSONObject();
+		try {
+			ret.put("eventType", eventType);
+			uzContext.success(ret, false);
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 	}
 
 	@SuppressWarnings("deprecation")
+	public static StateListDrawable addStateDrawable(Bitmap nomalBmp,
+			Bitmap pressBmp) {
+		StateListDrawable sd = new StateListDrawable();
+		sd.addState(new int[] { android.R.attr.state_pressed },
+				new BitmapDrawable(pressBmp));
+		sd.addState(new int[] { android.R.attr.state_focused },
+				new BitmapDrawable(nomalBmp));
+		sd.addState(new int[] {}, new BitmapDrawable(nomalBmp));
+		return sd;
+	}
+
+	/***
+	 * 表情图标点击操作;
+	 */
+	@SuppressWarnings("deprecation")
 	private void onFaceBtnClick() {
+		// 判断发送按钮图标是否可见;
 		if (isViewVisible(mRecordBtn)) {
+			// 隐藏发送显示
 			mRecordBtn.setVisibility(View.GONE);
+			// 设置最左侧显示的图标;
 			mSpeechBtn.setBackgroundDrawable(mSpeechBtnDrawable);
+			// 显示编辑框;
 			mEditText.setVisibility(View.VISIBLE);
 		}
+		// 控制面板是否可见的标识;
+
 		if (isKeyBoardVisible) {
+			// 当可见之后;显示表情面板;
 			clickFaceBtnShowTable();
+			// indicate;
 			setEmotionPageNums();
 		} else {
+			// 面板不可见时;
 			if (mTableLayout.getVisibility() == View.GONE) {
+				// 如果tab栏是隐藏的;
 				clickFaceBtnShowTable();
 				setEmotionPageNums();
 			} else {
+				// 表情可见面板;
 				if (isViewVisible(mExtraViewPager)) {
+					// 显示镖旗;
 					clickFaceBtnChangeToFace();
 					setEmotionPageNums();
 				} else {
+					// 隐藏表情面板;
 					clickFaceBtnHideTable();
 				}
 			}
@@ -1209,7 +1707,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	private void clickFaceBtnShowTable() {
 		clickFaceBtnChangeToFace();
-		hideInputMethod(mContext.getCurrentFocus());
+		hideInputMethod(((Activity) context()).getCurrentFocus());
 		isCallBack = false;
 		mDelayedHandler.postDelayed(mDelayedRunnable, 300);
 	}
@@ -1219,6 +1717,8 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		isKeyBoardVisible = false;
 		mFaceBtn.setBackgroundDrawable(mKeyboardBtnDrawable);
 		mExtraViewPager.setVisibility(View.GONE);
+		mRecordPanel.setVisibility(View.GONE);
+		resetBtn();
 		mFaceViewPager.setVisibility(View.VISIBLE);
 		chargeIndictorVisible("emotionPanel");
 		int pageNums = mFaceViewPager.getOffscreenPageLimit();
@@ -1246,20 +1746,21 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			showKeybord();
 		}
 	};
-	
+
+	private StateListDrawable bgDrawable;
+
 	/***
 	 * 显示语音的同时表切换图标缓过来；
 	 */
 
 	@SuppressWarnings("deprecation")
 	private void showRecordBtn() {
-		
-		//左侧点击后的切换图标；
+
+		// 左侧点击后的切换图标；
 		mSpeechBtn.setBackgroundDrawable(mSpeechKeyDrawable);
-		//测试代码；
-		//mSpeechBtn.setBackgroundDrawable();
-		
-		
+		// 测试代码；
+		// mSpeechBtn.setBackgroundDrawable();
+
 		mRecordBtn.setVisibility(View.VISIBLE);
 		mEditText.setVisibility(View.GONE);
 		mTableLayout.setVisibility(View.GONE);
@@ -1267,7 +1768,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mSendBtn.setVisibility(View.GONE);
 		}
 		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
-		hideInputMethod(mContext.getCurrentFocus());
+		hideInputMethod(((Activity) context()).getCurrentFocus());
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1282,23 +1783,24 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		mEditText.requestFocus();
 		showKeybord();
 	}
-	
 
 	@Override
 	public void beforeTextChanged(CharSequence s, int start, int count,
 			int after) {
+		showOrHideSendBtn();
 	}
 
 	@Override
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 		mTempMsg = s;
+		showOrHideSendBtn();
 	}
 
 	@Override
 	public void afterTextChanged(Editable s) {
-		//展示隐藏的发送控件；
+		// 展示隐藏的发送控件；
 		showOrHideSendBtn();
-		//（输入框内容改变事件）的回调；
+		// （输入框内容改变事件）的回调；
 		valueChangeCallBack();
 	}
 
@@ -1315,6 +1817,9 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	}
 
 	private void showOrHideSendBtn() {
+		if (mTempMsg == null) {
+			return;
+		}
 		int length = mTempMsg.length();
 		if (!isOnlySendBtnExist) {
 			if (length > 0 && mSendBtn.getVisibility() == View.GONE) {
@@ -1364,9 +1869,15 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	}
 
+	public static int mCurrentPageIndex = 0;
+
 	@Override
 	public void onPageSelected(int position) {
 		mIndictorView.setCurrentIndex(position);
+
+		if (mIsCenterDisplay) {
+			mCurrentPageIndex = position;
+		}
 	}
 
 	@Override
@@ -1383,25 +1894,28 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				0, KeyEvent.KEYCODE_ENDCALL);
 		mEditText.dispatchKeyEvent(event);
 	}
+
 	/***
 	 * 表情库的显示大小出现了问题;禅道有问题关于这里; 是因为他是直接用的px 应该根据对应的分辨率转换成px
+	 * 
 	 * @param index
 	 */
 	private void insertEmotion(String index) {
 		Bitmap bitmap = mJsParamsUtil.getBitmap(makeRealPath(index));
-		/**以下是修复禅道bug添加***/
+		/** 以下是修复禅道bug添加 ***/
 		int height = bitmap.getHeight();
 		int width = bitmap.getWidth();
-		
-		//将bitmap转换成Drawable
-		Drawable drawable =new BitmapDrawable(bitmap);
-		//设置图片的大小尺寸,转换成相应的dp 转换成实际的px值;
-		int dipToPixheight = UZUtility.dipToPix(height/2);
-		int dipToPixwidth = UZUtility.dipToPix(width/2);
+
+		// 将bitmap转换成Drawable
+		@SuppressWarnings("deprecation")
+		Drawable drawable = new BitmapDrawable(bitmap);
+		// 设置图片的大小尺寸,转换成相应的dp 转换成实际的px值;
+		int dipToPixheight = UZUtility.dipToPix(height / 2);
+		int dipToPixwidth = UZUtility.dipToPix(width / 2);
 		drawable.setBounds(0, 0, dipToPixwidth, dipToPixheight);
 		ImageSpan imageSpan = new ImageSpan(drawable, ImageSpan.ALIGN_BOTTOM);
-		//ImageSpan imageSpan = new ImageSpan(bitmap, ImageSpan.ALIGN_BOTTOM);
-		/**以上是修复禅道bug添加***/
+		// ImageSpan imageSpan = new ImageSpan(bitmap, ImageSpan.ALIGN_BOTTOM);
+		/** 以上是修复禅道bug添加 ***/
 		String text = mEmotionMap.get(index);
 		if (text != null) {
 			SpannableString spannableString = new SpannableString(text);
@@ -1411,7 +1925,8 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mEditText.getText().insert(cursorPosition, spannableString);
 		}
 	}
-    //这里面有显示图片的地方;
+
+	// 这里面有显示图片的地方;
 	private SpannableString parseMsg(String msg) {
 		Pattern p = Pattern.compile(".*?\\[(.*?)\\].*?");
 		Matcher m = p.matcher(msg);
@@ -1423,13 +1938,13 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		for (int i = 0; i < emotionList.size(); i++) {
 			String emotion = emotionList.get(i);
 			int index = msg.indexOf(emotion);
-			//图片文本的描述信息;
+			// 图片文本的描述信息;
 			String source = mInsertEmotionMap.get(emotionList.get(i));
-			//生成额表情图片;
+			// 生成额表情图片;
 			Bitmap bitmap = mJsParamsUtil.getBitmap(makeRealPath(source));
 			if (bitmap != null) {
-				//生成imageSpan 
-				ImageSpan imageSpan = new ImageSpan(mContext, bitmap);
+				// 生成imageSpan
+				ImageSpan imageSpan = new ImageSpan(context(), bitmap);
 				spannableString.setSpan(imageSpan, index,
 						index + emotion.length(),
 						Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
@@ -1445,9 +1960,14 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	public void openCallBack(String eventType, int index) {
 		JSONObject ret = new JSONObject();
 		try {
+			if ("show".equals(eventType)) {
+				ret.put("inputBarHeight",
+						UZCoreUtil.pixToDip(mEditLayout.getMeasuredHeight()));
+			}
 			ret.put("eventType", eventType);
 			if (eventType.equals("clickExtras")) {
 				ret.put("index", index);
+				ret.put("click", true);
 			}
 			if (eventType.equals("send")) {
 				ret.put("msg", getEditTextStr());
@@ -1484,12 +2004,15 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 					mLayoutListener);
 		}
 	}
+
 	/***
 	 * 监听键盘的变化;
+	 * 
 	 * @author baoch
-	 *
+	 * 
 	 */
-	private class LayoutListener implements ViewTreeObserver.OnGlobalLayoutListener {
+	private class LayoutListener implements
+			ViewTreeObserver.OnGlobalLayoutListener {
 		private View view;
 		private boolean isTableVisible;
 		private int inputBarHeight;
@@ -1498,12 +2021,12 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		public LayoutListener(View mParentLayout, int height) {
 			this.view = mParentLayout;
 			this.height = height;
-			inputBarHeight = mEditText.getHeight();
+			inputBarHeight = mEditLayout.getMeasuredHeight();
 		}
-		//FIXME
+
 		@Override
 		public void onGlobalLayout() {
-			if (inputBarHeight != mEditText.getHeight()) {
+			if (inputBarHeight != mEditLayout.getMeasuredHeight()) {
 				inputBarHeightCallBack(view);
 			} else {
 				if (height != initChatViewH(view)) {
@@ -1511,8 +2034,6 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 						tableCallBack(isTableVisible);
 						isTableVisible = isViewVisible(mTableLayout);
 					} else {
-						
-						Log.e("控制面板高度变化的监听;", "------------");
 						keyBoardCallBack(view);
 						height = initChatViewH(view);
 					}
@@ -1521,29 +2042,32 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 					isTableVisible = isViewVisible(mTableLayout);
 				}
 			}
-			inputBarHeight = mEditText.getHeight();
+			inputBarHeight = mEditLayout.getMeasuredHeight();
 		}
 	}
-	//FIXME
+
 	/***
 	 * 控制面板的高度;
+	 * 
 	 * @param view
 	 */
 	private void keyBoardCallBack(View view) {
 		int height = initChatViewH(view);
-		int inputBarHeight = UZCoreUtil.pixToDip(mEditText.getHeight());
-		int pixPanelHeight = mJsParamsUtil.getScreenHeigth(mContext) - height;
+
+		int inputBarHeight = UZCoreUtil.pixToDip(mEditLayout
+				.getMeasuredHeight());
+		int pixPanelHeight = mJsParamsUtil
+				.getScreenHeigth((Activity) context()) - height;
 		int dipPanelHeight = UZCoreUtil.pixToDip(pixPanelHeight);
-		if (dipPanelHeight != 0) {
-			mKeyboardHeight = dipPanelHeight;
-		}
+
 		inputFieldCallBack(mToggleKeyboardCallBack, inputBarHeight,
 				dipPanelHeight);
 	}
 
 	private void tableCallBack(boolean isTableVisible) {
 		boolean isVisible = isViewVisible(mTableLayout);
-		int inputBarHeight = UZCoreUtil.pixToDip(mEditText.getHeight());
+		int inputBarHeight = UZCoreUtil.pixToDip(mEditLayout
+				.getMeasuredHeight());
 		if (isVisible != isTableVisible) {
 			if (isVisible) {
 				inputFieldCallBack(mToggleKeyboardCallBack, inputBarHeight, 220);
@@ -1565,48 +2089,39 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			JSONObject result = new JSONObject();
 			try {
 				result.put("inputBarHeight", inputFieldH);
+				// if(chatViewH >= 0){
+				if (chatViewH <= 0) {
+					chatViewH = 0;
+				}
 				result.put("panelHeight", chatViewH);
 				if (moduleContext != null) {
 					moduleContext.success(result, false);
 				}
+				// }
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
 		}
 	}
-	//FIXME
+
 	/***
 	 * 输入框高度变化的监听;
 	 */
-	public void inputBarHeightCallBack(	View view) {
+	public void inputBarHeightCallBack(View view) {
 		int height = initChatViewH(view);
-		int inputBarHeight = UZCoreUtil.pixToDip(mEditText.getHeight());
-		int pixPanelHeight = mJsParamsUtil.getScreenHeigth(mContext) - height;
+		int inputBarHeight = UZCoreUtil.pixToDip(mEditLayout
+				.getMeasuredHeight());
+		int pixPanelHeight = mJsParamsUtil
+				.getScreenHeigth((Activity) context()) - height;
 		int dipPanelHeight = UZCoreUtil.pixToDip(pixPanelHeight);
-		if (dipPanelHeight != 0) {
-			mKeyboardHeight = dipPanelHeight;
-		}
-		//这里是false
+
+		// 这里是false
 		boolean isVisible = isViewVisible(mTableLayout);
-		//控制面板的高度;
-		//mKeyboardHeight;
+		// 控制面板的高度;
+		// mKeyboardHeight;
 		if (isVisible) {
-			
-			Log.e("isVisible==true", "------------------");
 			inputFieldCallBack(mChangeCallBack, inputBarHeight, 220);
 		} else {
-			//走到了这里;
-		/*	if (isKeyBoardVisible) {
-				Log.e("isVisible==true+isKeyBoardVisible==true", "------------------");
-				inputFieldCallBack(mChangeCallBack, inputBarHeight,
-						mKeyboardHeight);
-			} else {
-				Log.e("isVisible==true+isKeyBoardVisible==false", "------------------");
-				
-				inputFieldCallBack(mChangeCallBack, inputBarHeight, 0);
-			}*/
-			
-			//修改代码;
 			inputFieldCallBack(mChangeCallBack, inputBarHeight, dipPanelHeight);
 		}
 	}
@@ -1651,18 +2166,6 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				Constans.SEND_BTN_SIZE, Constans.BTN_SIZE, moduleContext);
 	}
 
-	@SuppressWarnings("deprecation")
-	private void initSendBtnDefaultStyles() {
-		int normalId = UZResourcesIDFinder
-				.getResDrawableID(Constans.SEND_BTN_NORMAL_ID);
-		int activeId = UZResourcesIDFinder
-				.getResDrawableID(Constans.SEND_BTN_ACTIVE_ID);
-		BitmapDrawable normal = createDrawable(normalId);
-		BitmapDrawable active = createDrawable(activeId);
-		StateListDrawable sendDrawable = createStateDrawable(normal, active);
-		mSendBtn.setBackgroundDrawable(sendDrawable);
-	}
-
 	private ViewBackground getViewBackground(String bgStr) {
 		ViewBackground viewBackground = new ViewBackground();
 		Bitmap bgBitmap = null;
@@ -1683,7 +2186,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			int btnTitleSize, int btnNoramlTitleColor,
 			ViewBackground btnNormalBg, ViewBackground btnHighlightBg,
 			int corner) {
-		CustomButton btn = new CustomButton(mContext);
+		CustomButton btn = new CustomButton(context());
 		btn.setText(btnNoramlTitle);
 		btn.setTextSize(btnTitleSize);
 		btn.setTextColor(btnNoramlTitleColor);
@@ -1721,6 +2224,10 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 					}
 					break;
 				case MotionEvent.ACTION_UP:
+					if (isCanceled) {
+						isCanceled = false;
+						return true;
+					}
 					onBtnClick(btn, false, btnNoramlTitle, btnNoramlTitleColor);
 					if (!isMoveOut) {
 						onSendBtnClick();
@@ -1749,4 +2256,27 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		}
 		return true;
 	}
+
+	private boolean isCanceled = false;
+
+	public void jsmethod_cancelRecord(UZModuleContext uzContext) {
+
+		if (mSendBtn != null && mModuleContext != null) {
+
+			String normalTitle = mJsParamsUtil.sendBtnTitle(mModuleContext);
+			int btnNoramlTitleColor = mJsParamsUtil
+					.sendBtnTitleColor(mModuleContext);
+			mSendBtn.setPressed(false);
+			mSendBtn.setText(normalTitle);
+			mSendBtn.setTextColor(btnNoramlTitleColor);
+			mSendBtn.invalidate();
+			isCanceled = true;
+
+			if (mRecordCanceledContext != null) {
+				JSONObject ret = new JSONObject();
+				mRecordCanceledContext.success(ret, false);
+			}
+		}
+	}
+
 }

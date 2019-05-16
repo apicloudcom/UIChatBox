@@ -1,3 +1,10 @@
+/**
+ * APICloud Modules
+ * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
+ * Licensed under the terms of the The MIT License (MIT).
+ * Please see the license.html included with this distribution for details.
+ */
+
 //
 //UZModule
 //
@@ -7,6 +14,7 @@
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
 public class Constans {
+
 	public static int INPUT_LAYOUT_BORDER_COLOR;
 	public static int INPUT_BOX_BORDER_COLOR;
 	public static int INPUT_BOX_BG_COLOR;
