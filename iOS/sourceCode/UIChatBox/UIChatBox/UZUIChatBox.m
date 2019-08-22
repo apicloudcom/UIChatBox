@@ -80,6 +80,8 @@ typedef enum {
 @property (nonatomic, strong) UIView *emotionView;
 @property (nonatomic, strong) UIView *soundRecordingView;
 @property (nonatomic, strong) UIView *extrasBoard;
+@property (nonatomic, strong) UIView *bgDView;
+
 @property (nonatomic, strong) UIPageControl *pageControl;
 @property (nonatomic, strong) UIPageControl *pageControlExtra;
 @property (nonatomic, assign) float currentInputfeildHeight;
@@ -245,15 +247,18 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     sendBtnTitleColor = [sendBtn stringValueForKey:@"titleColor" defaultValue:@"#ffffff"];
     sendBtnTilteSize = [sendBtn floatValueForKey:@"titleSize" defaultValue:13.0];
     _viewName = [paramDict_ stringValueForKey:@"fixedOn" defaultValue:nil];
-    //UIView *superView = [self getViewByName:_viewName];
-    //superView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin;
-
-    //_mainScreenWidth = superView.frame.size.width;
-    //_mainScreenHeight =superView.frame.size.height;
+    BOOL disableSendMessage = [paramDict_ boolValueForKey:@"disableSendMessage" defaultValue:false];
+    
+  
+//    UIView *superView = [self getViewByName:_viewName];
+//    superView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin;
+//
+//    _mainScreenWidth = superView.frame.size.width;
+//    _mainScreenHeight =superView.frame.size.height;
     
     CGSize windowSize = self.viewController.view.bounds.size;
-    _mainScreenHeight = windowSize.height;
-    _mainScreenWidth = windowSize.width;
+//    _mainScreenHeight = windowSize.height;
+//    _mainScreenWidth = windowSize.width;
  
     //输入框
     NSDictionary *inputBoxInfo = [styles dictValueForKey:@"inputBox" defaultValue:@{}];
@@ -316,10 +321,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
             self.chatH = 50;
         }
     }
-
-    _chatBgView.frame = CGRectMake(0, _mainScreenHeight-self.chatH, _mainScreenWidth, self.chatH);
-    self.currentInputfeildHeight = _chatBgView.frame.size.height;
-    self.currentChatViewHeight = _mainScreenHeight - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+    CGRect tabBarFrame = CGRectMake(0, windowSize.height-self.chatH, windowSize.width, self.chatH);
+    _chatBgView.frame = tabBarFrame;
+  
     NSDictionary *inputBarStyle = [styles dictValueForKey:@"inputBar" defaultValue:@{}];
     NSDictionary *inputBoxStyle = [styles dictValueForKey:@"inputBox" defaultValue:@{}];
     NSString *tempBgColor = [inputBarStyle stringValueForKey:@"bgColor" defaultValue:@"#f2f2f2"];
@@ -332,14 +336,31 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     _boardBgColor = tempBgColor;
     _chatBgView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
     _chatBgView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin;
-    [self addSubview:_chatBgView fixedOn:_viewName fixed:YES];
+    [self addSubview:_chatBgView fixedOn:_viewName fixed:true];
+    
+    if (disableSendMessage) {
+        _bgDView = [[UIView alloc]init];
+        _bgDView.frame = _chatBgView.frame;
+        _bgDView.backgroundColor = [UZAppUtils colorFromNSString:@"rgba(0,0,0,0.5)"];
+//        [_chatBgView addSubview:bgDView];
+        [self addSubview:_bgDView fixedOn:_viewName fixed:true];
+        [_bgDView bringSubviewToFront:_chatBgView];
+    }
+    //
+    windowSize = _chatBgView.superview.bounds.size;
+    _mainScreenWidth = windowSize.width;
+    _mainScreenHeight = windowSize.height;
+    tabBarFrame = CGRectMake(0, windowSize.height-self.chatH, windowSize.width, self.chatH);
+    _chatBgView.frame = tabBarFrame;
+    self.currentInputfeildHeight = _chatBgView.frame.size.height;
+    self.currentChatViewHeight = windowSize.height - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
     [self view:_chatBgView preventSlidBackGesture:YES];
     _chatBgView.userInteractionEnabled = YES;
     
 
     //表情面板、附加功能面板底板
     UIView *bgTempView = [[UIView alloc]init];
-    bgTempView.frame = CGRectMake(0, 0, _mainScreenWidth, 456);
+    bgTempView.frame = CGRectMake(0, 0, windowSize.height, 456);
     bgTempView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
     bgTempView.tag = TagBoardBG;
     [_chatBgView addSubview:bgTempView];
@@ -352,7 +373,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 //    cutLineUp.backgroundColor = [UZAppUtils colorFromNSString:barBoardColor];
 //    [_chatBgView addSubview:cutLineUp];
     //下分割线
-    UIView *cutLineDown = [[UIView alloc]initWithFrame:CGRectMake(0, 50-1, _mainScreenWidth, 1)];
+    UIView *cutLineDown = [[UIView alloc]initWithFrame:CGRectMake(0, 50-1, windowSize.width, 1)];
     cutLineDown.backgroundColor = [UZAppUtils colorFromNSString:barBoardColor];
     cutLineDown.tag = TagCutLineDown;
     [_chatBgView addSubview:cutLineDown];
@@ -361,11 +382,11 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     NSString *topDividerColor = [topDividerDict stringValueForKey:@"color" defaultValue:@"#000"];
     CGFloat topDividerWidth = [topDividerDict floatValueForKey:@"width" defaultValue:0];
     if ([UZAppUtils isValidColor:topDividerColor]) {
-        UILabel *lineLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, -topDividerWidth, _mainScreenWidth, topDividerWidth)];
+        UILabel *lineLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, -topDividerWidth, windowSize.width, topDividerWidth)];
         lineLabel.backgroundColor = [UZAppUtils colorFromNSString:topDividerColor];
         [_chatBgView addSubview:lineLabel];
     } else {
-        CGRect bgrect = CGRectMake(0, -topDividerWidth, _mainScreenWidth, topDividerWidth);
+        CGRect bgrect = CGRectMake(0, -topDividerWidth, windowSize.width, topDividerWidth);
         UIImageView *bgImgView = [[UIImageView alloc]initWithFrame:bgrect];
         bgImgView.backgroundColor = [UIColor clearColor];
         bgImgView.image = [UIImage imageWithContentsOfFile:[UZAppUtils getPathWithUZSchemeURL:topDividerColor]];
@@ -381,7 +402,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         NSString *highlight = [extrasBtnStyle stringValueForKey:@"activeImg" defaultValue:nil];
         //附加功能按钮
         UIButton *extrasBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        extrasBtn.frame = CGRectMake(_mainScreenWidth-9-29, topMargin, 30, 30);
+        extrasBtn.frame = CGRectMake(windowSize.width-9-29, topMargin, 30, 30);
         NSString *realaddNormal = [self getPathWithUZSchemeURL:normal];
         [extrasBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realaddNormal] forState:UIControlStateNormal];
         NSString *realaddHigh = [self getPathWithUZSchemeURL:highlight];
@@ -457,7 +478,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 
     float textX = 8;
-    float textXW = _mainScreenWidth-94;
+    float textXW = windowSize.width-94;
     if (showSpeechBtn) {
         textX = 16 + 30;
         textXW = textXW - 30 - 8;
@@ -540,9 +561,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (self.showFaceBtn) {
         UIButton *emotionKeyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         if (extrasBtnStyle) {
-            emotionKeyBtn.frame = CGRectMake(_mainScreenWidth-18-60,topMargin, 30, 30);
+            emotionKeyBtn.frame = CGRectMake(windowSize.width-18-60,topMargin, 30, 30);
         } else {
-            emotionKeyBtn.frame = CGRectMake(_mainScreenWidth-9-29, topMargin, 30, 30);
+            emotionKeyBtn.frame = CGRectMake(windowSize.width-9-29, topMargin, 30, 30);
         }
         emotionKeyBtn.tag = TagEmotionBtn;
         UIImage *emotionImg = [UIImage imageWithContentsOfFile:emotionNormalImg];
@@ -565,6 +586,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
    
     [self sendResultEventWithCallbackId:openCbID dataDict:@{@"eventType":@"show",@"inputBarHeight":[NSString stringWithFormat:@"%0.f",self.chatH]} errDict:nil doDelete:NO];
+    if (disableSendMessage) {
+        _textView.userInteractionEnabled = NO;
+        btnSuperView.userInteractionEnabled = NO;
+    }
 
 }
 
@@ -605,6 +630,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (_chatBgView) {
         [_chatBgView removeFromSuperview];
         self.chatBgView = nil;
+    }
+    if (_bgDView) {
+        [_bgDView removeFromSuperview];
+        self.bgDView = nil;
     }
     _maxHeight = 90;
     if (recordBtnId!=-1) {
@@ -686,6 +715,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (_soundRecordingView) {
         _soundRecordingView.hidden = NO;
     }
+    if (_bgDView) {
+        _bgDView.hidden = NO;
+    }
 }
 
 - (void)hide:(NSDictionary *)paramDict_ {
@@ -700,6 +732,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
     if (_soundRecordingView) {
         _soundRecordingView.hidden = YES;
+    }
+    if (_bgDView) {
+        _bgDView.hidden = YES;
     }
 }
 
@@ -738,8 +773,6 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 - (void)value:(NSDictionary *)paramsDict_ {
     NSInteger cbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
-    
-    
     if ([paramsDict_ objectForKey:@"msg"]) {
         NSString *msgStr = [paramsDict_ stringValueForKey:@"msg" defaultValue:@""];
         _textView.text = msgStr;
@@ -1001,28 +1034,31 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         //下移输入框
         //[self keyboardWillHide:nil];
         [_textView resignFirstResponder];
-        CGRect inputRect = _chatBgView.frame;
+//        CGRect inputRect = _chatBgView.frame;
+        CGSize windowSize = _chatBgView.superview.bounds.size;
+        CGRect tabBarFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
+        
         CGFloat currentChatH = _chatBgView.frame.size.height;
-        inputRect.origin.y = _mainScreenHeight-currentChatH;
+//        inputRect.origin.y = _mainScreenHeight-currentChatH;
         //下移表情面板
         CGRect emotionRect = _emotionView.frame;
-        emotionRect.origin.y = _mainScreenHeight;
+        emotionRect.origin.y = windowSize.height;
         //下移添加面板
         CGRect addRect = _extrasBoard.frame;
-        addRect.origin.y = _mainScreenHeight;
+        addRect.origin.y = windowSize.height;
         //下移录音面板
         CGRect recordRect = _soundRecordingView.frame;
-        recordRect.origin.y = _mainScreenHeight;
+        recordRect.origin.y = windowSize.height;
         //动画
         [UIView beginAnimations:nil context:nil];
         [UIView setAnimationDuration:0.3];
-        _chatBgView.frame = inputRect;
+        _chatBgView.frame = tabBarFrame;
         _extrasBoard.frame = addRect;
         _emotionView.frame = emotionRect;
         _soundRecordingView.frame = recordRect;
         [UIView commitAnimations];
         self.currentInputfeildHeight = currentChatH;
-        self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
         //将左边按钮置为键盘图标
         [btn setImage:[UIImage imageWithContentsOfFile:keyNormalImg] forState:UIControlStateNormal];
         [btn setImage:[UIImage imageWithContentsOfFile:keyHighImg] forState:UIControlStateHighlighted];
@@ -1040,7 +1076,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
             textBoardTemp.size.height -= changeY;
             _chatBgView.frame = textBoardTemp;
             self.currentInputfeildHeight = _chatBgView.frame.size.height;
-            self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+            self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
         }
         //下分割线
         [self alignBottomLineToChatBackgroundBottom];
@@ -1071,17 +1107,19 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         _textView.hidden = NO;
         //关闭键盘
         [_textView resignFirstResponder];
+           CGSize windowSize = _chatBgView.superview.bounds.size;
+//           CGRect tabBarFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
         //关闭表情面板
         CGRect  emojiRect = _emotionView.frame;
-        emojiRect.origin.y = _mainScreenHeight;
+        emojiRect.origin.y = windowSize.height;
         _emotionView.frame = emojiRect;
         //关闭附加面板
         CGRect  extrasRect = _extrasBoard.frame;
-        extrasRect.origin.y = _mainScreenHeight;
+        extrasRect.origin.y = windowSize.height;
         _extrasBoard.frame = extrasRect;
         //弹出添加板
         CGRect motionRect = _soundRecordingView.frame;
-        motionRect.origin.y = _mainScreenHeight-216;
+        motionRect.origin.y = windowSize.height-216;
         [self.viewController.view bringSubviewToFront:_soundRecordingView];
         //输入框移动
         CGRect inputRect = _chatBgView.frame;
@@ -1097,7 +1135,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_soundRecordingView setFrame:motionRect];
         [UIView commitAnimations];
         self.currentInputfeildHeight = _chatBgView.frame.size.height;
-        self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
         //将按钮置为表情状态
         UIButton *tempFceBtn = (UIButton*)[btnSuperView viewWithTag:TagEmotionBtn];
         [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
@@ -1132,7 +1170,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [tempSpeechBtn setImage:[UIImage imageWithContentsOfFile:normalIcon] forState:UIControlStateNormal];
     [tempSpeechBtn setImage:[UIImage imageWithContentsOfFile:normalIconAC] forState:UIControlStateSelected];
     tempSpeechBtn.selected = NO;
-    //隐藏录音按钮
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+    //           CGRect tabBarFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);    //隐藏录音按钮
     _recordBtn.hidden = YES;
     _textView.hidden = NO;
     if (emotionBtnState == 0) {//表情状态
@@ -1141,19 +1180,19 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_textView resignFirstResponder];
         //关闭添加面板
         CGRect  emojiRect = _extrasBoard.frame;
-        emojiRect.origin.y = _mainScreenHeight;
+        emojiRect.origin.y = windowSize.height;
         _extrasBoard.frame = emojiRect;
         //关闭录音面板
         CGRect  recordRect = _soundRecordingView.frame;
-        recordRect.origin.y = _mainScreenHeight;
+        recordRect.origin.y = windowSize.height;
         _soundRecordingView.frame = recordRect;
         //弹出表情面板
         CGRect motionRect = _emotionView.frame;
         if (KIsiPhoneX) {
-            motionRect.origin.y = _mainScreenHeight-246;
+            motionRect.origin.y = windowSize.height-246;
 
         }else{
-            motionRect.origin.y = _mainScreenHeight-216;
+            motionRect.origin.y = windowSize.height-216;
 
         }
         [self.viewController.view bringSubviewToFront:_emotionView];
@@ -1177,7 +1216,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_emotionView setFrame:motionRect];
         [UIView commitAnimations];
         self.currentInputfeildHeight = _chatBgView.frame.size.height;
-        self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
         //将按钮状态值置为1-----键盘状态
         emotionBtnState =1;
         additionalBtnState = 0;
@@ -1198,15 +1237,15 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_textView becomeFirstResponder];
         //关闭表情面板
         CGRect  emojiRect = _emotionView.frame;
-        emojiRect.origin.y = _mainScreenHeight;
+        emojiRect.origin.y = windowSize.height;
         _emotionView.frame = emojiRect;
         //关闭添加面板
         CGRect  addRect =_extrasBoard.frame;
-        addRect.origin.y = _mainScreenHeight;
+        addRect.origin.y = windowSize.height;
         _extrasBoard.frame = addRect;
         //关闭录音面板
         CGRect  recordRect = _soundRecordingView.frame;
-        recordRect.origin.y = _mainScreenHeight;
+        recordRect.origin.y = windowSize.height;
         _soundRecordingView.frame = recordRect;
         //将按钮置为表情状态
         [btn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
@@ -1245,6 +1284,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 //*附加按钮**/
 - (void)extrasBtnClick:(UIButton *)btns {
     //将左边按钮重置
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+
     if (additionalBtnState == 0) {
         UIButton *tempSpeechBtn = (UIButton *)[btnSuperView viewWithTag:TagSpeechBtn];
         NSString *normalIcon = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"normalImg" defaultValue:nil]];
@@ -1260,19 +1301,19 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_textView resignFirstResponder];
         //关闭表情面板
         CGRect  emojiRect = _emotionView.frame;
-        emojiRect.origin.y = _mainScreenHeight;
+        emojiRect.origin.y = windowSize.height;
         _emotionView.frame = emojiRect;
         //关闭录音面板
         CGRect  recordRect = _soundRecordingView.frame;
-        recordRect.origin.y = _mainScreenHeight;
+        recordRect.origin.y = windowSize.height;
         _soundRecordingView.frame = recordRect;
         //弹出添加板
         CGRect motionRect = _extrasBoard.frame;
         if (KIsiPhoneX) {
-            motionRect.origin.y = _mainScreenHeight-246;
+            motionRect.origin.y = windowSize.height-246;
             
         }else{
-            motionRect.origin.y = _mainScreenHeight-216;
+            motionRect.origin.y = windowSize.height-216;
             
         }
         [self.viewController.view bringSubviewToFront:_extrasBoard];
@@ -1298,7 +1339,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_extrasBoard setFrame:motionRect];
         [UIView commitAnimations];
         self.currentInputfeildHeight = _chatBgView.frame.size.height;
-        self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
         //将按钮置为表情状态
         UIButton *tempFceBtn = (UIButton*)[btnSuperView viewWithTag:TagEmotionBtn];
         [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
@@ -1367,33 +1408,38 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (sender.numberOfTapsRequired == 1) {//关闭输入框
         if (!isClose) {
             additionalBtnState = 0;
+            CGSize windowSize = _chatBgView.superview.frame.size;
+            CGRect tabBarFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
             //下移输入框
             [_textView resignFirstResponder];
-            CGRect inputRect = _chatBgView.frame;
-            inputRect.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
+//            CGRect inputRect = _chatBgView.frame;
+//            inputRect.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
             //下移表情面板
             CGRect emotionRect = _emotionView.frame;
-            emotionRect.origin.y = _mainScreenHeight;
+            emotionRect.origin.y = windowSize.height;
             //下移添加面板
             CGRect addRect = _extrasBoard.frame;
-            addRect.origin.y = _mainScreenHeight;
+            addRect.origin.y = windowSize.height;
             //下移录音面板
             CGRect recordRect = _soundRecordingView.frame;
-            recordRect.origin.y = _mainScreenHeight;
+            recordRect.origin.y = windowSize.height;
             //动画
             [UIView beginAnimations:nil context:nil];
             [UIView setAnimationDuration:0.3];
-           _chatBgView.frame = inputRect;
+     
+
+            _chatBgView.frame = tabBarFrame;
+           //_chatBgView.frame = inputRect;
             _extrasBoard.frame = addRect;
             _emotionView.frame = emotionRect;
             _soundRecordingView.frame = recordRect;
             [UIView commitAnimations];
             self.currentInputfeildHeight = _chatBgView.frame.size.height;
-            self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+            self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
             //将左边按钮重置
-            UIButton *tempSpeechBtn = (UIButton*)[btnSuperView viewWithTag:TagSpeechBtn];
-            NSString *normalIcon = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"normalImg" defaultValue:nil]];
-            NSString *normalIconAC = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"activeImg" defaultValue:nil]];
+//            UIButton *tempSpeechBtn = (UIButton*)[btnSuperView viewWithTag:TagSpeechBtn];
+//            NSString *normalIcon = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"normalImg" defaultValue:nil]];
+//            NSString *normalIconAC = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"activeImg" defaultValue:nil]];
             
             UIButton *tempFceBtn = (UIButton*)[btnSuperView viewWithTag:TagEmotionBtn];
             [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
@@ -1439,18 +1485,20 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 #pragma mark 绘制各种面板
 - (void)drawEmotionBoard:(NSString *)path {//绘制表情面板
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+
     _emotionView = [[UIView alloc]init];
     if (KIsiPhoneX) {
-        _emotionView.frame = CGRectMake(0, _mainScreenHeight,_mainScreenWidth , 246);
+        _emotionView.frame = CGRectMake(0, windowSize.height,windowSize.width , 246);
 
     }else{
-        _emotionView.frame = CGRectMake(0, _mainScreenHeight,_mainScreenWidth , 216);
+        _emotionView.frame = CGRectMake(0, windowSize.height,windowSize.width , 216);
 
     }
     _emotionView.backgroundColor = [UZAppUtils colorFromNSString:_boardColor];
     [self addSubview:_emotionView fixedOn:_viewName fixed:YES];
     //计算每行按钮个数
-    int btnNum = getUIRowCountWith(_mainScreenWidth, 30.0);
+    int btnNum = getUIRowCountWith(windowSize.width, 30.0);
     //计算有几屏幕显示
     float pageNumtemp = self.sourceAry.count/(btnNum*4.0);
     NSInteger pageNumEmo = self.sourceAry.count/(btnNum*4);
@@ -1458,7 +1506,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         pageNumEmo++;
     }
     //计算按钮间隙
-    float verInterval = (_mainScreenWidth - 30*btnNum)/(btnNum + 1);
+    float verInterval = (windowSize.width - 30*btnNum)/(btnNum + 1);
     UIScrollView *emotionSource = [[UIScrollView alloc]initWithFrame:_emotionView.bounds];
     emotionSource.backgroundColor = [UIColor clearColor];
     emotionSource.bounces = NO;
@@ -1469,18 +1517,18 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     emotionSource.showsHorizontalScrollIndicator = NO;
     emotionSource.tag = TagEmotionBoard;
     [_emotionView addSubview:emotionSource];
-    [emotionSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumEmo, 216)];
+    [emotionSource setContentSize:CGSizeMake(windowSize.width*pageNumEmo, 216)];
     //添加页面控制器
     
     self.pageControl = [[UIPageControl alloc]init];
     if (KIsiPhoneX) {
-        self.pageControl.frame =CGRectMake((_mainScreenWidth-126)/2,216-30,126,20);
+        self.pageControl.frame =CGRectMake((windowSize.width-126)/2,216-30,126,20);
     }else{
         if (isShowSendBtn) {
-            self.pageControl.frame =CGRectMake((_mainScreenWidth-60-verInterval)/2-63,216-30,126,20);
+            self.pageControl.frame =CGRectMake((windowSize.width-60-verInterval)/2-63,216-30,126,20);
 
         }else{
-            self.pageControl.frame =CGRectMake((_mainScreenWidth-126)/2,216-30,126,20);
+            self.pageControl.frame =CGRectMake((windowSize.width-126)/2,216-30,126,20);
         }
     }
     if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
@@ -1497,7 +1545,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
     //添加发送按钮
     UIButton *sendBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    sendBtn.frame = CGRectMake(_mainScreenWidth-60-verInterval, 216-40-5, 60, 40);
+    sendBtn.frame = CGRectMake(windowSize.width-60-verInterval, 216-40-5, 60, 40);
     UIImage *bgImage;
     if ([UZAppUtils isValidColor:sendBtnBgStr]) {
         bgImage = [self getImageFromColor:[UZAppUtils colorFromNSString:sendBtnBgStr] withSize:sendBtn.bounds.size];
@@ -1545,7 +1593,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                 if (the>=self.sourceAry.count) {
                     //添加消除按钮
                     UIButton *cancelBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                    cancelBtn.frame = CGRectMake(_mainScreenWidth-(30+verInterval)+(_mainScreenWidth*i), 139, 30, 30);
+                    cancelBtn.frame = CGRectMake(windowSize.width-(30+verInterval)+(windowSize.width*i), 139, 30, 30);
                     NSString *img = [NSString stringWithFormat:@"%@/delete.png",path];
                     NSString *realImg = [self getPathWithUZSchemeURL:img];
                     [cancelBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realImg] forState:UIControlStateNormal];
@@ -1557,7 +1605,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                 if (j==3 && g==btnNum-1) {
                     //添加消除按钮
                     UIButton *cancelBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                    cancelBtn.frame = CGRectMake(_mainScreenWidth-(30+verInterval)+(_mainScreenWidth*i), 139, 30, 30);
+                    cancelBtn.frame = CGRectMake(windowSize.width-(30+verInterval)+(windowSize.width*i), 139, 30, 30);
                     NSString *img = [NSString stringWithFormat:@"%@/delete.png",path];
                     NSString *realImg = [self getPathWithUZSchemeURL:img];
                     [cancelBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realImg] forState:UIControlStateNormal];
@@ -1570,7 +1618,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                     NSString *widgetPath = [NSString stringWithFormat:@"%@/%@.png",path,emojiPath];
                     NSString *emojiRealPath = [NSString stringWithFormat:@"%@",[self getPathWithUZSchemeURL:widgetPath]];
                     UIButton *emoji = [UIButton buttonWithType:UIButtonTypeCustom];
-                    emoji.frame = CGRectMake((_mainScreenWidth*i)+verInterval+(30+verInterval)*g, 16+(30+11)*j, 32, 32);
+                    emoji.frame = CGRectMake((windowSize.width*i)+verInterval+(30+verInterval)*g, 16+(30+11)*j, 32, 32);
                     self.emojPath = emojiRealPath;
                     [emoji setBackgroundImage:[UIImage imageWithContentsOfFile:emojiRealPath] forState:UIControlStateNormal];
                     emoji.tag = the+1;
@@ -1583,8 +1631,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 }
 
 - (void)drawRecordBoard:(NSDictionary *)soundRecordInfo {
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+
     _soundRecordingView = [[UIView alloc]init];
-    _soundRecordingView.frame = CGRectMake(0, _mainScreenHeight,_mainScreenWidth , 216);
+    _soundRecordingView.frame = CGRectMake(0, windowSize.height,windowSize.width , 216);
     _soundRecordingView.backgroundColor = [UZAppUtils colorFromNSString:_boardColor];
     [self addSubview:_soundRecordingView fixedOn:_viewName fixed:YES];
     //往滚动视图添加按钮
@@ -1622,34 +1672,47 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 }
 
 - (void)drawExtraBoard:(NSDictionary *)extrasInfo {
+    CGSize windowSize = _chatBgView.superview.bounds.size;
     NSArray *btnsAry = [extrasInfo arrayValueForKey:@"btns" defaultValue:nil];
     BOOL isAdaptScreenSize = [extrasInfo boolValueForKey:@"isAdaptScreenSize" defaultValue:true];
+    BOOL isCenterDisplay = [extrasInfo boolValueForKey:@"isCenterDisplay" defaultValue:false];
     if (![btnsAry isKindOfClass:[NSArray class]] || btnsAry.count==0) {
         return;
     }
     _extrasBoard = [[UIView alloc]init];
-    _extrasBoard.frame = CGRectMake(0, _mainScreenHeight,_mainScreenWidth , 216);
+    _extrasBoard.frame = CGRectMake(0, windowSize.height,windowSize.width , 216);
     _extrasBoard.backgroundColor = [UZAppUtils colorFromNSString:_boardColor];
     [self addSubview:_extrasBoard fixedOn:_viewName fixed:YES];
     //计算每行按钮个数
-    int btnNum = 0;
-    if (isAdaptScreenSize) {
-        
-        btnNum = getUIRowCountWith(_mainScreenWidth, 60);
-
+    int btnNum = 0;  float pageNumtemp; NSInteger pageNumAdd;  float verInterval;
+    if (!isCenterDisplay) {
+        if (isAdaptScreenSize) {
+            btnNum = getUIRowCountWith(windowSize.width, 60);
+        }else{
+            btnNum = 4;
+        }
+        //计算有几屏幕显示
+        pageNumtemp = btnsAry.count/(2.0*btnNum);
+        pageNumAdd = btnsAry.count/(2*btnNum);
+        if ((pageNumtemp - pageNumAdd) > 0) {
+            pageNumAdd ++;
+        }
+        //计算按钮间隙
+       verInterval = (windowSize.width - 60*btnNum)/(btnNum + 1);
     }else{
-     
-        btnNum = 4;
+        btnNum = 2;
+        //计算有几屏幕显示
+        pageNumtemp = btnsAry.count/(btnNum);
+        pageNumAdd = btnsAry.count/(btnNum);
+        if ((pageNumtemp - pageNumAdd) > 0) {
+            pageNumAdd ++;
+        }
+        //计算按钮间隙
+        verInterval = (windowSize.width - 80*btnNum)/(btnNum + 1);
     }
+   
     
-    //计算有几屏幕显示
-    float pageNumtemp = btnsAry.count/(2.0*btnNum);
-    NSInteger pageNumAdd = btnsAry.count/(2*btnNum);
-    if ((pageNumtemp - pageNumAdd) > 0) {
-        pageNumAdd ++;
-    }
-    //计算按钮间隙
-    float verInterval = (_mainScreenWidth - 60*btnNum)/(btnNum + 1);
+
     //添加页码控制器
     self.pageControlExtra = [[UIPageControl alloc]initWithFrame:CGRectMake(0,216-20,126,20)];
     if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
@@ -1661,7 +1724,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [pageControlExtra addTarget:self action:@selector(turnPageAdd) forControlEvents:UIControlEventValueChanged];
     if (showPgControll==both || showPgControll==emotionBoard) {
         if (pageNumAdd > 1) {
-            self.pageControlExtra.center = CGPointMake(_mainScreenWidth/2.0, 216-20);
+            self.pageControlExtra.center = CGPointMake(windowSize.width/2.0, 216-20);
             [_extrasBoard addSubview:pageControlExtra];
         }
     }
@@ -1687,43 +1750,88 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         titleSize =10;
     }
     //往滚动视图添加按钮
-    for (int i=0; i<pageNumAdd; i++) {//页循环
-        for (int j=0; j<2; j++) {//行循环
-            for (int g=0; g<btnNum; g++) {//列循环
-                int the = 2*btnNum*i+j*btnNum+g;
-                if (the >= btnsAry.count) {
-                    return;
+    if (isCenterDisplay) {
+        
+        for (int i=0; i<pageNumAdd; i++) {//页循环
+            for (int j=0; j<1; j++) {//行循环
+                for (int g=0; g<2; g++) {//列循环
+                    int the = btnNum*i+j*btnNum+g;
+                    if (the >= btnsAry.count) {
+                        return;
+                    }
+                    float origY =(216-85)/2 ;
+                    NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
+                    NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
+                    NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
+                    NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
+                    UIView *backView = [[UIView alloc]initWithFrame:CGRectMake(_mainScreenWidth*i+verInterval+(80+verInterval)*g, origY, 85, 85)];
+                    backView.backgroundColor = [UIColor clearColor];
+                    [addSource addSubview:backView];
+                    
+                    UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+                    detailBtn.frame = CGRectMake(12.5, 0, 60, 60);
+                    if (normalImg) {
+                        NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
+                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
+                        NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
+                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
+                    }else{
+                        [detailBtn setBackgroundColor:[UIColor greenColor]];
+                    }
+                    [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
+                    detailBtn.tag = the;
+                    [backView addSubview:detailBtn];
+                    UILabel *titleLabel = [[UILabel alloc]init];
+                    titleLabel.backgroundColor = [UIColor clearColor];
+                    titleLabel.frame = CGRectMake(12.5, 65, 60, 20);
+                    titleLabel.text = title;
+                    titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
+                    titleLabel.font = [UIFont systemFontOfSize:titleSize];
+                    titleLabel.textAlignment = NSTextAlignmentCenter;
+                    [backView addSubview:titleLabel];
                 }
-                float origY;
-                if (j==0) { origY =15; }else{ origY =15+60+20+11; }
-                NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
-                NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
-                NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
-                NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
-                UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                detailBtn.frame = CGRectMake(_mainScreenWidth*i+verInterval+(60+verInterval)*g, origY, 60, 60);
-                if (normalImg) {
-                    NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
-                    [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
-                    NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
-                    [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
-                }else{
-                    [detailBtn setBackgroundColor:[UIColor greenColor]];
+            }
+        }
+    }else{
+        for (int i=0; i<pageNumAdd; i++) {//页循环
+            for (int j=0; j<2; j++) {//行循环
+                for (int g=0; g<btnNum; g++) {//列循环
+                    int the = 2*btnNum*i+j*btnNum+g;
+                    if (the >= btnsAry.count) {
+                        return;
+                    }
+                    float origY;
+                    if (j==0) { origY =15; }else{ origY =15+60+20+11; }
+                    NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
+                    NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
+                    NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
+                    NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
+                    UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+                    detailBtn.frame = CGRectMake(_mainScreenWidth*i+verInterval+(60+verInterval)*g, origY, 60, 60);
+                    if (normalImg) {
+                        NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
+                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
+                        NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
+                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
+                    }else{
+                        [detailBtn setBackgroundColor:[UIColor greenColor]];
+                    }
+                    [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
+                    detailBtn.tag = the;
+                    [addSource addSubview:detailBtn];
+                    UILabel *titleLabel = [[UILabel alloc]init];
+                    titleLabel.backgroundColor = [UIColor clearColor];
+                    titleLabel.frame = CGRectMake(detailBtn.frame.origin.x, detailBtn.frame.origin.y+detailBtn.frame.size.height+5.0, 60, 20);
+                    titleLabel.text = title;
+                    titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
+                    titleLabel.font = [UIFont systemFontOfSize:titleSize];
+                    titleLabel.textAlignment = NSTextAlignmentCenter;
+                    [addSource addSubview:titleLabel];
                 }
-                [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
-                detailBtn.tag = the;
-                [addSource addSubview:detailBtn];
-                UILabel *titleLabel = [[UILabel alloc]init];
-                titleLabel.backgroundColor = [UIColor clearColor];
-                titleLabel.frame = CGRectMake(detailBtn.frame.origin.x, detailBtn.frame.origin.y+detailBtn.frame.size.height+5.0, 60, 20);
-                titleLabel.text = title;
-                titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
-                titleLabel.font = [UIFont systemFontOfSize:titleSize];
-                titleLabel.textAlignment = NSTextAlignmentCenter;
-                [addSource addSubview:titleLabel];
             }
         }
     }
+    
 }
 
 #pragma mark 面板内点击事件
@@ -1783,6 +1891,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 #pragma mark 键盘监听
 //当键盘出现或改变时调用
 - (void)keyboardWillShow:(NSNotification *)aNotification{
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+
     if (![_textView isFirstResponder]) {
         return;
     }
@@ -1802,16 +1912,16 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     emotionBtnState = 0;
     //关闭表情面板
     CGRect  emojiRect = _emotionView.frame;
-    emojiRect.origin.y = _mainScreenHeight;
+    emojiRect.origin.y = windowSize.height;
     _emotionView.frame = emojiRect;
     //关闭添加面板
     CGRect  addRect =_extrasBoard.frame;
-    addRect.origin.y = _mainScreenHeight;
+    addRect.origin.y = windowSize.height;
     _extrasBoard.frame = addRect;
     
     //关闭录音面板
     CGRect  addRecordRect =_soundRecordingView.frame;
-    addRecordRect.origin.y = _mainScreenHeight;
+    addRecordRect.origin.y = windowSize.height;
     _soundRecordingView.frame = addRecordRect;
     //获取键盘的高度
     NSDictionary *userInfo = [aNotification userInfo];
@@ -1826,7 +1936,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }else{
         currentChatH = _chatBgView.frame.size.height;
     }
-    tempFrame.origin.y = _mainScreenHeight - height - currentChatH;
+    tempFrame.origin.y = windowSize.height - height - currentChatH;
        //tempFrame.origin.y = _mainScreenHeight - height - 50;
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:NO];
@@ -1835,7 +1945,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
     [UIView commitAnimations];
     self.currentInputfeildHeight = currentChatH;
-    self.currentChatViewHeight = _mainScreenHeight - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+    self.currentChatViewHeight = windowSize.height - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
     [self.viewController.view bringSubviewToFront:_chatBgView];
 }
 
@@ -1846,33 +1956,37 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
     additionalBtnState = 0;
     isKeyboardShow = NO;
- 
-    CGRect  tempFrame = _chatBgView.frame;
-    tempFrame.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
+
+//    CGRect  tempFrame = _chatBgView.frame;
+//    tempFrame.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
+    CGSize windowSize = _chatBgView.superview.frame.size;
+    CGRect tempFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:YES];
     [UIView setAnimationDuration:0.3];
     [_chatBgView setFrame:tempFrame];
     [UIView commitAnimations];
     self.currentInputfeildHeight = _chatBgView.frame.size.height;
-    self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+    self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
 }
 
 - (void)shrinkKeyboard {
     //下移输入框
     [_textView resignFirstResponder];
-    CGRect inputRect = _chatBgView.frame;
-    inputRect.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
+//    CGRect inputRect = _chatBgView.frame;
+//    inputRect.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
+    CGSize windowSize = _chatBgView.superview.frame.size;
+    CGRect inputRect = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
     
     //下移表情面板
     CGRect emotionRect = _emotionView.frame;
-    emotionRect.origin.y = _mainScreenHeight;
+    emotionRect.origin.y = windowSize.height;
     //下移添加面板
     CGRect addRect = _extrasBoard.frame;
-    addRect.origin.y = _mainScreenHeight;
+    addRect.origin.y = windowSize.height;
     //下移录音面板
     CGRect recordRect = _soundRecordingView.frame;
-    recordRect.origin.y = _mainScreenHeight;
+    recordRect.origin.y = windowSize.height;
     //动画
     [UIView beginAnimations:nil context:nil];
     [UIView setAnimationDuration:0.3];
@@ -1882,7 +1996,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     _soundRecordingView.frame = recordRect;
     [UIView commitAnimations];
     self.currentInputfeildHeight = _chatBgView.frame.size.height;
-    self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+    self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
     //将左边按钮重置
     UIButton *tempSpeechBtn = (UIButton*)[btnSuperView viewWithTag:TagSpeechBtn];
     NSString *normalIcon = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"normalImg" defaultValue:nil]];
@@ -1908,8 +2022,9 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         CGRect rect = btnSuperView.frame;
         rect.origin.y = _chatBgView.bounds.size.height - self.chatH;
         btnSuperView.frame = rect;
+        CGSize windowSize = _chatBgView.superview.frame.size;
         self.currentInputfeildHeight = _chatBgView.frame.size.height;
-        self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
     }
     //下分割线
     UIView *line = [_chatBgView viewWithTag:TagCutLineDown];
@@ -2003,6 +2118,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
 
 - (void)textViewDidChange:(UITextView *)textView {
     NSLog(@"%@",textView.text);
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+
     UZUIChatBoxTextView *tempView = (UZUIChatBoxTextView *)textView;
     if (textView.text.length != 0) {//开始输入则占位提示文字消失
         tempView.placeholder.text = nil;
@@ -2106,7 +2223,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
             //NSLog(@"Animation---contentOffset.y:%f",textView.contentOffset.y);
         }];
         self.currentInputfeildHeight = _chatBgView.frame.size.height;
-        self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight - _chatBgView.frame.origin.y;
         
         //NSLog(@"contentSize.height:%f",textView.contentSize.height);
         //NSLog(@"textView.contentInset.top:%f",textView.contentInset.top);
@@ -2129,7 +2246,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
             _chatBgView.frame = CGRectMake(x, y, w, h);
             [UIView commitAnimations];
             self.currentInputfeildHeight = _chatBgView.frame.size.height;
-            self.currentChatViewHeight = _mainScreenHeight - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+            self.currentChatViewHeight = windowSize.height - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
         }
         //调整内容文本的上下间隙
         CGSize textContentSize = textView.contentSize;

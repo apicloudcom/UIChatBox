@@ -5,7 +5,6 @@
 APICloud 的 UIChatBox 模块是一个聊天输入框模块，可通过此模块调用一个简单的聊天盒子功能，支持自定义标签面板，附加功能面板和录音按钮等相关功能。但是由于本模块 UI 布局界面为固定模式，不能满足日益增长的广大开发者对搜索模块样式的需求。因此，广大原生模块开发者，可以参考此模块的开发方式、接口定义等开发规范，或者基于此模块开发出更多符合产品设计的新 UI 布局的模块，希望此模块能起到抛砖引玉的作用。
 
 # 模块接口
-
 /*
 Title: UIChatBox
 Description: UIChatBox
@@ -31,6 +30,10 @@ Description: UIChatBox
 [cancelRecord](#cancelRecord)
 
 </div>
+
+# 论坛示例
+
+为帮助用户更好更快的使用模块，论坛维护了一个[示例](https://community.apicloud.com/bbs/thread-139014-1-1.html)，示例中包含示例代码、知识点讲解、注意事项等，供您参考。
 
 # **模块概述**
 
@@ -59,7 +62,7 @@ UIChatBox 模块是一个聊天输入框模块，开发者可自定义该输入�
 
 模块预览图如下：
 
-![UIChatBox](/img/docImage/chatBox.jpg)
+![UIChatBox](https://docs.apicloud.com/img/docImage/chatBox.jpg)
 
 ***本模块源码已开源，地址为：https://github.com/apicloudcom/UIChatBox***
 

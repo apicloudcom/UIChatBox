@@ -1,10 +1,3 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
-
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
 import java.util.ArrayList;
@@ -126,6 +119,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	private boolean isKeyBoardVisible;
 	private boolean isIndicatorVisible;
 	private Handler mDelayedHandler = new Handler(Looper.getMainLooper());
+	
 	private Runnable mDelayedRunnable = new Runnable() {
 		@Override
 		public void run() {
@@ -187,6 +181,42 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			if (mEditText != null) {
 				mEditText.getViewTreeObserver().removeGlobalOnLayoutListener(
 						mLayoutListener);
+				mLayoutListener = null;
+			}
+			mChatBoxLayout = null;
+			mToggleKeyboardCallBack = null;
+			mChangeCallBack = null;
+			mPressCallBack = null;
+			mPressCancelCallBack = null;
+			mMoveOutCallBack = null;
+			mMoveOutCancelCallBack = null;
+			mMoveInCallBack = null;
+			mShowRecordCallBack = null;
+			mShowEmotionCallBack = null;
+			mShowExtrasCallBack = null;
+			mValueChangeCallBack = null;
+		}
+
+		if (coverLayout != null) {
+			removeViewFromCurWindow(coverLayout);
+		}
+	}
+	
+	
+
+	@SuppressWarnings("deprecation")
+	@Override
+	protected void onClean() {
+		
+		if (mChatBoxLayout != null) {
+			removeViewFromCurWindow(mChatBoxLayout);
+			removeViewFromCurWindow(mSpaceView);
+			if(mDelayedHandler != null){
+				mDelayedHandler.removeCallbacks(mDelayedRunnable);
+				mDelayedHandler.removeCallbacks(mDelayedShowKeyBoardRunnable);
+			}
+			if (mEditText != null) {
+				mEditText.getViewTreeObserver().removeGlobalOnLayoutListener(mLayoutListener);
 				mLayoutListener = null;
 			}
 			mChatBoxLayout = null;
@@ -285,8 +315,16 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				mEditText.setText("");
 				valueCallBack(moduleContext, "");
 			} else {
-				SpannableString insertMsg = parseMsg(msg);
+				final SpannableString insertMsg = parseMsg(msg);
 				mEditText.setText(insertMsg);
+				mEditText.post(new Runnable(){
+
+					@Override
+					public void run() {
+						mEditText.setSelection(insertMsg.length());
+					}
+					
+				});
 				valueCallBack(moduleContext, getEditTextStr());
 			}
 		}

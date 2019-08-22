@@ -106,7 +106,6 @@
      						activeImg: 'widget://image/chatBox_album1.png',         //（可选项）字符串类型；按钮按下时的图片
      						width:100,           //（可选项）数字类型；按钮的宽度，默认：100
      						height:100           //（可选项）数字类型；按钮的高度，默认：100
-
    					}
 			    },
 			     
@@ -166,7 +165,7 @@
 		}
 		
 		
-		//输入框内容改变事件value: ''//字符串类型；输入框当前内容，仅当 target 为 inputBar name 为 valueChanged 时有值
+		// 输入框内容改变事件value: ''//字符串类型；输入框当前内容，仅当 target 为 inputBar name 为 valueChanged 时有值
 		
 		//输入框所在区域弹动事件
 	   //  function addLis(){
@@ -185,26 +184,11 @@
 		function addLis(){
 			var obj = api.require('UIChatBox');
 			 obj.addEventListener({
-        target : 'inputBar',
-        name : 'change'
-    }, function(ret, err) {
-        var _h = ret.inputBarHeight + ret.panelHeight;
-        var h = api.winHeight - 70 - _h;
-       // alert("h"+h +"api.winHeight"+api.winHeight);
-     
-       //console.log("api.winHeight=" + api.winHeight + " inputBar=" + JSON.stringify(ret) + " h=" + h);
-	   alert("keyboard11"+JSON.stringify(ret));
-       api.setFrameAttr({
-            name : 'chat_frm',
-            rect : {
-                x : 0,
-                y : 70,
-                w : 'auto',
-                h : h        //动态设置chat_frm的高度
-            }
-        });
-
-    });
+        		target : 'inputBar',
+        		name : 'change'
+    		 }, function(ret, err) {
+          		alert(JSON.stringify(ret));
+    		 });
 		}
 		
 		// 1. 左边按钮点击事件 & 设置icon
@@ -217,7 +201,7 @@
 			var obj = api.require('UIChatBox');
 			obj.addEventListener({
 				target: 'inputBar',
-				name: 'change'
+				name: 'move'
 			}, function(ret,err){
 				alert("edit"+JSON.stringify(ret));
 			});
