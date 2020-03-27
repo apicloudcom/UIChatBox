@@ -66,6 +66,20 @@ typedef enum {
     //private
     float intervalePop;
     float topMarginH;
+    
+    
+    BOOL keyBoardShow; //判断收起还是弹出
+    NSString*eventTypeChange;
+    
+//    UZModuleMethodContext*addlistenerContext;
+    int keyBoardHeightNoti;
+    BOOL emotionBool;
+    BOOL extrasBool;
+    BOOL isFirstNoti; //处理第一次打开
+    
+
+    BOOL isEmotionIsSelect;//
+    BOOL isAdditionalIsSelect;//
 
 }
 
@@ -99,6 +113,8 @@ typedef enum {
 @property (nonatomic, strong)NSString *recordType;
 @property (nonatomic, assign) BOOL isStatusBarNormal;
 
+@property (nonatomic, strong) NSString *keyBoradTextColor;
+
 @end
 
 @implementation UZUIChatBox
@@ -125,6 +141,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [[NSNotificationCenter defaultCenter]removeObserver:self name:UIKeyboardWillHideNotification object:nil];
     [[NSNotificationCenter defaultCenter]removeObserver:self name:UIApplicationWillChangeStatusBarFrameNotification object:nil];
     [[NSNotificationCenter defaultCenter]removeObserver:self name:UIApplicationDidChangeStatusBarFrameNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter]removeObserver:self name:UIKeyboardDidShowNotification object:nil];
+//    [[NSNotificationCenter defaultCenter]removeObserver:self name:UIKeyboardDidHideNotification object:nil];
+
 
     [self close:nil];
 }
@@ -134,12 +154,17 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (self != nil) {
         [[ NSNotificationCenter defaultCenter ] addObserver : self selector : @selector (statusBarFrameWillChange:) name : UIApplicationWillChangeStatusBarFrameNotification object : nil ];
         [[ NSNotificationCenter defaultCenter ] addObserver : self selector : @selector (layoutControllerSubViews:) name : UIApplicationDidChangeStatusBarFrameNotification object : nil ];
-
+//
         //增加监听，当键盘出现或改变时收出消息
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
-        
+
+
         //增加监听，当键退出时收出消息
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+
+//        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+
 
 
         
@@ -184,31 +209,36 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    float new = [[change valueForKey:@"new"] floatValue];
-    float old = [[change valueForKey:@"old"] floatValue];
-    if (new != old){
-        NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:2];
-        if ([keyPath isEqualToString:@"currentInputfeildHeight"]) {
-            if (inputBoxChangeIdcb >= 0) {
-                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-                [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-                [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
-            }
-            CGRect rect = btnSuperView.frame;
-            rect.origin.y = _chatBgView.bounds.size.height - self.chatH;
-            [UIView beginAnimations:nil context:nil];
-            [UIView setAnimationDuration:0.3];
-            btnSuperView.frame = rect;
-            [UIView commitAnimations];
-        }
-        if ([keyPath isEqualToString:@"currentChatViewHeight"]) {
-            if (inputBarMoveIdcb >= 0) {
-                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-                [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-                [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
-            }
-        }
-    }
+//    float new = [[change valueForKey:@"new"] floatValue];
+//    float old = [[change valueForKey:@"old"] floatValue];
+//
+//    NSLog(@".....%f....%f...",new,old);
+//
+//    if (new != old){
+//        NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:2];
+//        if ([keyPath isEqualToString:@"currentInputfeildHeight"]) {
+//            if (inputBoxChangeIdcb >= 0) {
+//                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+//                [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+//                [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+//            }
+//            CGRect rect = btnSuperView.frame;
+//            rect.origin.y = _chatBgView.bounds.size.height - self.chatH;
+//            [UIView beginAnimations:nil context:nil];
+//            [UIView setAnimationDuration:0.3];
+//            btnSuperView.frame = rect;
+//            [UIView commitAnimations];
+//        }
+//        if ([keyPath isEqualToString:@"currentChatViewHeight"]) {
+//            if (inputBarMoveIdcb >= 0) {
+//                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+//                [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+//                [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+////                [addlistenerContext callbackWithRet:dict err:nil delete:NO];
+//            }
+//        }
+//    }
+//
 }
 
 #pragma mark-
@@ -216,6 +246,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 #pragma mark-
 
 - (void)open:(NSDictionary *)paramDict_{
+    extrasBool = YES;
+    emotionBool = YES;
     intervalePop = [paramDict_ floatValueForKey:@"delay" defaultValue:intervalePop];
     if (_chatBgView) {
         [[_chatBgView superview] bringSubviewToFront:_chatBgView];
@@ -305,7 +337,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     singleTap.delegate = self;
     singleTap.delaysTouchesBegan = YES;
     singleTap.numberOfTapsRequired = 1;
-    UIWebView *superWebView = (UIWebView *)self.uzWebView;
+//    UIWebView *superWebView = (UIWebView *)self.uzWebView;
+    Class cls = NSClassFromString([NSString stringWithFormat:@"%@%@", @"UI", @"WebView"]);
+    UIView<UZWebBrowserProtocol> *superWebView = [[cls alloc]init];
+    superWebView = ( UIView<UZWebBrowserProtocol> *)self.uzWebView;
     [superWebView.scrollView addGestureRecognizer:singleTap];
     //输入框背景承载视图
     _chatBgView = [[UIView alloc]init];
@@ -331,7 +366,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     NSString *textColor = [inputBarStyle stringValueForKey:@"textColor" defaultValue:@"#000"];
     CGFloat textSize = [inputBarStyle floatValueForKey:@"textSize" defaultValue:16];
     CGFloat textMarginLeft = [inputBarStyle floatValueForKey:@"textMarginLeft" defaultValue:1];
+    NSString*placeholderColor = [inputBarStyle stringValueForKey:@"placeholderColor" defaultValue:@""];
 
+    self.keyBoradTextColor = textColor;
+    
     _boardColor = [inputBoxStyle stringValueForKey:@"boardBgColor" defaultValue:@"#f2f2f2"];
     _boardBgColor = tempBgColor;
     _chatBgView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
@@ -346,7 +384,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [self addSubview:_bgDView fixedOn:_viewName fixed:true];
         [_bgDView bringSubviewToFront:_chatBgView];
     }
-    //
+
     windowSize = _chatBgView.superview.bounds.size;
     _mainScreenWidth = windowSize.width;
     _mainScreenHeight = windowSize.height;
@@ -556,6 +594,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         _textView.placeholder.text = _placeholderStr;
         _textView.placeholderSize = textSize;
         [_textView.placeholder setFont:[UIFont systemFontOfSize:textSize]];
+    if (![placeholderColor isEqualToString:@""]) {
+        _textView.placeholder.textColor = [UZAppUtils colorFromNSString:placeholderColor];
+    }
+    
 //    }
     //表情按钮
     if (self.showFaceBtn) {
@@ -650,7 +692,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
     if (inputBarMoveIdcb >= 0) {
         [self deleteCallback:inputBarMoveIdcb];
-        [self removeObserver:self forKeyPath:@"currentChatViewHeight" context:nil];
+//        [self removeObserver:self forKeyPath:@"currentChatViewHeight" context:nil];
         inputBarMoveIdcb = -1;
     }
     if (sendBtnInfo) {
@@ -746,6 +788,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     _timer = [NSTimer scheduledTimerWithTimeInterval:intervalePop target:self selector:@selector(hideKeyborad) userInfo:nil repeats:NO];
     if (cbid!=-1) {
         [self sendResultEventWithCallbackId:cbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"status"] errDict:nil doDelete:YES];
+        //hhhhh
     }
 }
 
@@ -754,6 +797,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     [_textView resignFirstResponder];
     if (cbid!=-1) {
         [self sendResultEventWithCallbackId:cbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"status"] errDict:nil doDelete:YES];
+        //hhhh
     }
 }
 
@@ -781,6 +825,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [dict setObject:msgStr forKey:@"msg"];
         [dict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
         [self sendResultEventWithCallbackId:cbid dataDict:dict errDict:nil doDelete:YES];
+        //hhhhh
     } else {
         //NSString *msgStr = _textView.text;
         //回调给前端
@@ -809,6 +854,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [dict setObject:willSendText forKey:@"msg"];
         [dict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
         [self sendResultEventWithCallbackId:cbid dataDict:dict errDict:nil doDelete:YES];
+        //hhhhh
     }
     
     
@@ -836,6 +882,11 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 }
 
 - (void)addEventListener:(NSDictionary *)paramsDict_ {
+
+//-(void)jsmethod_addEventListener:(UZModuleMethodContext*)context {
+//    addlistenerContext = context;
+//    NSDictionary*paramsDict_ = context.param;
+//    [addlistenerContext callbackWithRet:@{@"111":@"222"} err:nil delete:NO];
     NSInteger targetCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     if (targetCbid < 0) {
         return;
@@ -865,17 +916,22 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
             }
             showExtrasIdcb = targetCbid;
         } else if ([name isEqualToString:@"move"]) {
+
             if (inputBarMoveIdcb >=0 ) {
                 [self deleteCallback:inputBarMoveIdcb];
-                [self removeObserver:self forKeyPath:@"currentChatViewHeight" context:nil];
             }
             inputBarMoveIdcb = targetCbid;
-            [self addObserver:self forKeyPath:@"currentChatViewHeight" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+            eventTypeChange = @"move";
+
+
         } else if ([name isEqualToString:@"change"]) {
             if (inputBoxChangeIdcb >= 0) {
                 [self deleteCallback:inputBoxChangeIdcb];
             }
             inputBoxChangeIdcb = targetCbid;
+            eventTypeChange = @"change";
+            
+
         } else if ([name isEqualToString:@"valueChanged"]) {
             if (valueChangedCbid >= 0) {
                 [self deleteCallback:valueChangedCbid];
@@ -960,17 +1016,36 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
             [_extrasBoard addSubview:pageControlExtra];
         }
     }
+    //移除所有
+    UIScrollView *addSourceOld = [_extrasBoard viewWithTag:TagExtraBoard];
+    [addSourceOld removeFromSuperview];
+    addSourceOld = nil;
+    
+    
     //添加滚动视图
-    UIScrollView *addSource = [_extrasBoard viewWithTag:TagExtraBoard];
+    UIScrollView *addSource = [[UIScrollView alloc]initWithFrame:_extrasBoard.bounds];
+    addSource.backgroundColor = [UIColor clearColor];
+    addSource.bounces = NO;
+    addSource.scrollsToTop = NO;
+    addSource.delegate = self;
+    addSource.pagingEnabled = YES;
+    addSource.showsVerticalScrollIndicator = NO;
+    addSource.showsHorizontalScrollIndicator = NO;
+    addSource.tag = TagExtraBoard;
+    [_extrasBoard addSubview:addSource];
     [addSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumAdd, 216)];
-    //移除所有的
-    NSArray *allSubview = [addSource subviews];
-    for (int i=0; i<allSubview.count; i++) {
-        id targetView = [allSubview objectAtIndex:i];
-        if ([targetView isKindOfClass:[UIButton class]] || [targetView isKindOfClass:[UILabel class]]) {
-            [targetView removeFromSuperview];
-        }
-    }
+    
+//    UIScrollView *addSource = [_extrasBoard viewWithTag:TagExtraBoard];
+//    [addSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumAdd, 216)];
+//
+//    //移除所有的
+//    NSArray *allSubview = [addSource subviews];
+//    for (int i=0; i<allSubview.count; i++) {
+//        id targetView = [allSubview objectAtIndex:i];
+//        if ([targetView isKindOfClass:[UIButton class]] || [targetView isKindOfClass:[UILabel class]]) {
+//            [targetView removeFromSuperview];
+//        }
+//    }
     NSString *titleColor = [extrasInfo stringValueForKey:@"titleColor" defaultValue:nil];
     float titleSize = [extrasInfo floatValueForKey:@"titleSize" defaultValue:10];
     if (titleSize == 0) {
@@ -1020,6 +1095,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 #pragma mark 弹出各种面板事件
 - (void)speechBtnClick:(UIButton *)btn {
+
     if (btn.selected) {
         //将左边按钮置为当前按钮高亮图标
         //隐藏录音按钮
@@ -1031,6 +1107,21 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         // 键盘弹出时, 下分割线位置要重新放到输入框底下.
         [self alignBottomLineToChatInputField];
     } else {
+        if ([_textView resignFirstResponder] == NO) {
+            if ([eventTypeChange isEqualToString:@"change"]) {
+                NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+            }
+            if ([eventTypeChange isEqualToString:@"move"]) {
+                NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+            }
+        }
+//        NSLog(@"===%@===",[_textView resignFirstResponder]);
         //下移输入框
         //[self keyboardWillHide:nil];
         [_textView resignFirstResponder];
@@ -1080,6 +1171,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         }
         //下分割线
         [self alignBottomLineToChatBackgroundBottom];
+        
+    
     }
     //将表情按钮置为表情状态
     UIButton *tempFceBtn = (UIButton*)[btnSuperView viewWithTag:TagEmotionBtn];
@@ -1091,9 +1184,11 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     }
     //重设按钮点击状态
     btn.selected = !btn.selected;
+
 }
 
 -(void)speechRecordBtnClick:(UIButton*)sender{
+
     //将左边按钮重置
        if (recordBtnState == 0) {
         UIButton *tempSpeechBtn = (UIButton *)[btnSuperView viewWithTag:TagSpeechBtn];
@@ -1175,9 +1270,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     _recordBtn.hidden = YES;
     _textView.hidden = NO;
     if (emotionBtnState == 0) {//表情状态
+        emotionBool = NO;
         //关闭键盘
-        //[self keyboardWillHide:nil];
         [_textView resignFirstResponder];
+        emotionBool = YES;
         //关闭添加面板
         CGRect  emojiRect = _extrasBoard.frame;
         emojiRect.origin.y = windowSize.height;
@@ -1230,6 +1326,17 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [emotionKeyBtn setImage:[UIImage imageWithContentsOfFile:keyHighImg] forState:UIControlStateHighlighted];
         [emotionKeyBtn addTarget:self action:@selector(emotionBtnClick:) forControlEvents:UIControlEventTouchUpInside];
         [btnSuperView addSubview:emotionKeyBtn];
+        
+        
+        if (inputBarMoveIdcb >= 0) {
+            NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+            [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+            [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+            [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+        }
+        
+        isEmotionIsSelect = YES;
+
     } else {
         emotionBtnState = 0;
         //[self shrinkKeyboard];
@@ -1250,15 +1357,19 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         //将按钮置为表情状态
         [btn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
         [btn setImage:[UIImage imageWithContentsOfFile:emotionHighImg] forState:UIControlStateHighlighted];
+        
+        _textView.textColor = [UZAppUtils colorFromNSString:self.keyBoradTextColor];
+        
+        isEmotionIsSelect = NO;
+
+
     }
     
     [self alignBottomLineToChatInputField];
-    
     if (showEmotionIdcb >= 0 && emotionBtnState != 0) {
         [self sendResultEventWithCallbackId:showEmotionIdcb dataDict:nil errDict:nil doDelete:NO];
     }
 }
-
 
 /**
  把底部线,放到输入框底部.
@@ -1269,6 +1380,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     CGRect lineRect = line.frame;
     lineRect.origin.y = _chatBgView.frame.size.height-1;
     line.frame = lineRect;
+    
+//    NSLog(@"----%f====%f---",self.currentInputfeildHeight,self.currentChatViewHeight);
 }
 
 /**
@@ -1297,8 +1410,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         _recordBtn.hidden = YES;
         _textView.hidden = NO;
         //关闭键盘
+        extrasBool = NO;
         //[self keyboardWillHide:nil];
         [_textView resignFirstResponder];
+        extrasBool = YES;
         //关闭表情面板
         CGRect  emojiRect = _emotionView.frame;
         emojiRect.origin.y = windowSize.height;
@@ -1350,66 +1465,57 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         if (showExtrasIdcb >= 0) {
             [self sendResultEventWithCallbackId:showExtrasIdcb dataDict:nil errDict:nil doDelete:NO];
         }
+        
+        if (inputBarMoveIdcb >= 0) {
+    //        ssss
+            NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+
+            [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                           
+            [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+                          
+            [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+        }
+        
+        isAdditionalIsSelect = YES;
     }else{
         additionalBtnState =0;
         //[self shrinkKeyboard];
         [_textView becomeFirstResponder];
         
+        isAdditionalIsSelect = NO;
     }
     
     [self alignBottomLineToChatInputField];
-//    UIButton *tempSpeechBtn = (UIButton *)[btnSuperView viewWithTag:TagSpeechBtn];
-//    NSString *normalIcon = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"normalImg" defaultValue:nil]];
-//    NSString *normalIconAC = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"activeImg" defaultValue:nil]];
-//    [tempSpeechBtn setImage:[UIImage imageWithContentsOfFile:normalIcon] forState:UIControlStateNormal];
-//    [tempSpeechBtn setImage:[UIImage imageWithContentsOfFile:normalIconAC] forState:UIControlStateHighlighted];
-//    tempSpeechBtn.selected = NO;
-//    //隐藏录音按钮
-//    _recordBtn.hidden = YES;
-//    _textView.hidden = NO;
-//    //关闭键盘
-//    //[self keyboardWillHide:nil];
-//    [_textView resignFirstResponder];
-//    //关闭表情面板
-//    CGRect  emojiRect = _emotionView.frame;
-//    emojiRect.origin.y = _mainScreenHeight;
-//    _emotionView.frame = emojiRect;
-//    //弹出添加板
-//    CGRect motionRect = _extrasBoard.frame;
-//    motionRect.origin.y = _mainScreenHeight-216;
-//    [self.viewController.view bringSubviewToFront:_extrasBoard];
-//    //输入框移动
-//    CGRect inputRect = _chatBgView.frame;
-////    inputRect.origin.y = motionRect.origin.y-inputRect.size.height;
-//    inputRect.origin.y = motionRect.origin.y-50;
-//    //动画
-//    [UIView beginAnimations:nil context:NULL];
-//    [UIView setAnimationBeginsFromCurrentState:YES];
-//    [UIView setAnimationDuration:0.3];
-//    [_chatBgView setFrame:inputRect];
-//    [_extrasBoard setFrame:motionRect];
-//    [UIView commitAnimations];
-//    self.currentInputfeildHeight = _chatBgView.frame.size.height;
-//    self.currentChatViewHeight = _mainScreenHeight-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
-//    //将按钮置为表情状态
-//    UIButton *tempFceBtn = (UIButton*)[btnSuperView viewWithTag:TagEmotionBtn];
-//    [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
-//    [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionHighImg] forState:UIControlStateHighlighted];
-//    emotionBtnState = 0;
-//
-//    if (showExtrasIdcb >= 0) {
-//        [self sendResultEventWithCallbackId:showExtrasIdcb dataDict:nil errDict:nil doDelete:NO];
-//    }
+    
+
+    
+
 }
 
-#pragma mark 缩回输入框事件
+#pragma mark 缩回输入框事件(点击空白处)
 - (void)handleSingleTap:(UITapGestureRecognizer *)sender {
-    
+
     if (sender.numberOfTapsRequired == 1) {//关闭输入框
         if (!isClose) {
             additionalBtnState = 0;
             CGSize windowSize = _chatBgView.superview.frame.size;
             CGRect tabBarFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
+            
+            if ([_textView resignFirstResponder] == NO) {
+               if ([eventTypeChange isEqualToString:@"change"]) {
+                   NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+                   [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                   [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                   [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+               }
+               if ([eventTypeChange isEqualToString:@"move"]) {
+                   NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+                   [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                   [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                   [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+               }
+           }
             //下移输入框
             [_textView resignFirstResponder];
 //            CGRect inputRect = _chatBgView.frame;
@@ -1446,6 +1552,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
             [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionHighImg] forState:UIControlStateHighlighted];
 
             [self alignBottomLineToChatBackgroundBottom];
+            
+            
         }else{
             [self close:nil];
             [self closeKeyboard:nil];
@@ -1896,7 +2004,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     if (![_textView isFirstResponder]) {
         return;
     }
-    
+
+
     isKeyboardShow = YES;
     [self alignBottomLineToChatInputField];
     //将左边按钮重置
@@ -1918,7 +2027,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     CGRect  addRect =_extrasBoard.frame;
     addRect.origin.y = windowSize.height;
     _extrasBoard.frame = addRect;
-    
+
     //关闭录音面板
     CGRect  addRecordRect =_soundRecordingView.frame;
     addRecordRect.origin.y = windowSize.height;
@@ -1928,6 +2037,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     NSValue *aValue = [userInfo objectForKey:UIKeyboardFrameEndUserInfoKey];
     CGRect keyboardRect = [aValue CGRectValue];
     int height = keyboardRect.size.height;
+    
+    keyBoardHeightNoti = height;
     
     CGRect  tempFrame = _chatBgView.frame;
     CGFloat currentChatH;
@@ -1947,27 +2058,72 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     self.currentInputfeildHeight = currentChatH;
     self.currentChatViewHeight = windowSize.height - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
     [self.viewController.view bringSubviewToFront:_chatBgView];
-}
 
+    _textView.textColor = [UZAppUtils colorFromNSString:self.keyBoradTextColor];
+
+    NSLog(@"----%f====%f---",self.currentInputfeildHeight,self.currentChatViewHeight);
+
+
+
+}
+-(void)keyboardDidShow:(NSNotification*)noti{
+
+//    if ([eventTypeChange isEqualToString:@"change"]) {
+//        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+//        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+//        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+//        [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+//
+//    }
+//    else if ([eventTypeChange isEqualToString:@"move"]) {
+//         NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+//         [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+//         [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+//         [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+//
+//     }
+    
+}
+-(void)keyboardDidHide:(NSNotification*)noti{
+    
+//
+//    if ([eventTypeChange isEqualToString:@"change"]) {
+//        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+//        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+//        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+//        [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+//
+//    }
+//    else if ([eventTypeChange isEqualToString:@"move"]) {
+//        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+//        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+//        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+//        [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+//
+//    }
+
+}
 //当键退出时调用
 - (void)keyboardWillHide:(NSNotification *)aNotification {
-    if (!isKeyboardShow) {
-        return;
-    }
-    additionalBtnState = 0;
-    isKeyboardShow = NO;
+    NSLog(@"键盘收回");
+//    if (!isKeyboardShow) {
+//        return;
+//    }
+//    additionalBtnState = 0;
+//    isKeyboardShow = NO;
+//
+////    CGRect  tempFrame = _chatBgView.frame;
+////    tempFrame.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
+//    CGSize windowSize = _chatBgView.superview.frame.size;
+//    CGRect tempFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
+//    [UIView beginAnimations:nil context:NULL];
+//    [UIView setAnimationBeginsFromCurrentState:YES];
+//    [UIView setAnimationDuration:0.3];
+//    [_chatBgView setFrame:tempFrame];
+//    [UIView commitAnimations];
+//    self.currentInputfeildHeight = _chatBgView.frame.size.height;
+//    self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
 
-//    CGRect  tempFrame = _chatBgView.frame;
-//    tempFrame.origin.y = _mainScreenHeight-_chatBgView.frame.size.height;
-    CGSize windowSize = _chatBgView.superview.frame.size;
-    CGRect tempFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
-    [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationBeginsFromCurrentState:YES];
-    [UIView setAnimationDuration:0.3];
-    [_chatBgView setFrame:tempFrame];
-    [UIView commitAnimations];
-    self.currentInputfeildHeight = _chatBgView.frame.size.height;
-    self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
 }
 
 - (void)shrinkKeyboard {
@@ -2108,6 +2264,127 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
 #pragma mark -
 
 #pragma mark UITextViewDelegate
+//- (void)textViewDidBeginEditing:(UITextView *)textView{
+//    NSLog(@"mkimimimi");
+////    __block UZModule *weakSelf = self;
+//    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC));
+//    dispatch_after(delayTime, dispatch_get_main_queue(), ^{
+//        if (addEventListenerContext) {
+//            [addEventListenerContext callbackWithRet:@{@"wwwwwwww":@"222222"} err:nil delete:NO];
+//        }
+//    });
+//}
+
+-(void)textViewDidBeginEditing:(UITextView *)textView{
+    
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+
+       if (![_textView isFirstResponder]) {
+           return;
+       }
+       isKeyboardShow = YES;
+       [self alignBottomLineToChatInputField];
+       //将左边按钮重置
+       UIButton *tempSpeechBtn = (UIButton *)[btnSuperView viewWithTag:TagSpeechBtn];
+       NSString *normalIcon = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"normalImg" defaultValue:nil]];
+       NSString *normalIconAC = [self getPathWithUZSchemeURL:[self.sendBtnInfo stringValueForKey:@"activeImg" defaultValue:nil]];
+       [tempSpeechBtn setImage:[UIImage imageWithContentsOfFile:normalIcon] forState:UIControlStateNormal];
+       [tempSpeechBtn setImage:[UIImage imageWithContentsOfFile:normalIconAC] forState:UIControlStateHighlighted];
+       //将按钮置为表情状态
+       UIButton *tempFceBtn = (UIButton *)[btnSuperView viewWithTag:TagEmotionBtn];
+       [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionNormalImg] forState:UIControlStateNormal];
+       [tempFceBtn setImage:[UIImage imageWithContentsOfFile:emotionHighImg] forState:UIControlStateHighlighted];
+       emotionBtnState = 0;
+       //关闭表情面板
+       CGRect  emojiRect = _emotionView.frame;
+       emojiRect.origin.y = windowSize.height;
+       _emotionView.frame = emojiRect;
+       //关闭添加面板
+       CGRect  addRect =_extrasBoard.frame;
+       addRect.origin.y = windowSize.height;
+       _extrasBoard.frame = addRect;
+       
+       //关闭录音面板
+       CGRect  addRecordRect =_soundRecordingView.frame;
+       addRecordRect.origin.y = windowSize.height;
+       _soundRecordingView.frame = addRecordRect;
+       //获取键盘的高度
+
+    int height = keyBoardHeightNoti;
+
+    
+       CGRect  tempFrame = _chatBgView.frame;
+       CGFloat currentChatH;
+       if (KIsiPhoneX) {
+           currentChatH = _chatBgView.frame.size.height-34;
+       }else{
+           currentChatH = _chatBgView.frame.size.height;
+       }
+       tempFrame.origin.y = windowSize.height - height - currentChatH;
+          //tempFrame.origin.y = _mainScreenHeight - height - 50;
+       [UIView beginAnimations:nil context:NULL];
+       [UIView setAnimationBeginsFromCurrentState:NO];
+       [UIView setAnimationDuration:0.3];
+       [_chatBgView setFrame:tempFrame];
+
+       [UIView commitAnimations];
+       self.currentInputfeildHeight = currentChatH;
+       self.currentChatViewHeight = windowSize.height - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+       [self.viewController.view bringSubviewToFront:_chatBgView];
+       
+       _textView.textColor = [UZAppUtils colorFromNSString:self.keyBoradTextColor];
+       
+       NSLog(@"----%f====%f---",self.currentInputfeildHeight,self.currentChatViewHeight);
+
+    
+    if ([eventTypeChange isEqualToString:@"move"]) {
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+        [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+    }
+    if ([eventTypeChange isEqualToString:@"change"]) {
+        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+        [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+
+    }
+}
+- (void)textViewDidEndEditing:(UITextView *)textView{
+    
+    if (!isKeyboardShow) {
+        return;
+    }
+    additionalBtnState = 0;
+    isKeyboardShow = NO;
+
+    CGSize windowSize = _chatBgView.superview.frame.size;
+    CGRect tempFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationDuration:0.3];
+    [_chatBgView setFrame:tempFrame];
+    [UIView commitAnimations];
+    self.currentInputfeildHeight = _chatBgView.frame.size.height;
+    self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight-_chatBgView.frame.origin.y;
+
+    if (!extrasBool || !emotionBool) {
+        return;
+    }
+    if ([eventTypeChange isEqualToString:@"change"]) {
+        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+        [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+    }
+    if ([eventTypeChange isEqualToString:@"move"]) {
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+        [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+    }
+}
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text{
     if([text isEqualToString:@"\n"]){
         [self send:nil];
@@ -2280,6 +2557,36 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     if (scrollView.tag != TagEmotionBoard && scrollView.tag != TagExtraBoard) {
         [self shrinkKeyboard];
+        if (emotionBtnState == 1 && isEmotionIsSelect == YES) {
+            isEmotionIsSelect = NO;
+            if ([eventTypeChange isEqualToString:@"change"]) {
+                 NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+                 [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                 [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                 [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+             }
+             if ([eventTypeChange isEqualToString:@"move"]) {
+                 NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+                 [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                 [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                 [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+             }
+        }        
+        if (additionalBtnState == 1 && isAdditionalIsSelect == YES) {
+                isAdditionalIsSelect = NO;
+                if ([eventTypeChange isEqualToString:@"change"]) {
+                     NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
+                     [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                     [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                     [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+                 }
+                 if ([eventTypeChange isEqualToString:@"move"]) {
+                     NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+                     [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+                     [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
+                     [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
+                 }
+            }
     }
 }
 
@@ -2317,15 +2624,15 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
     UITouch *t = [touches anyObject];
     if ([self.recordType isEqualToString:@"pressRecord"]) {
         CGPoint where = [t locationInView:_recordBtn];
-        if (where.x<0 || where.x>_recordBtn.bounds.size.width || where.y<0 || where.y>_recordBtn.bounds.size.height) {
-            [self changeRecordBgNormal];
-            if (touchEvent != touchMoveOut) {
-                if (recBtnMoveoutIdcb >= 0) {
-                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
-                }
-            }
-            touchEvent=touchMoveOut;
-        } else {
+//        if (where.x<0 || where.x>_recordBtn.bounds.size.width || where.y<0 || where.y>_recordBtn.bounds.size.height) {
+//            [self changeRecordBgNormal];
+//            if (touchEvent != touchMoveOut) {
+//                if (recBtnMoveoutIdcb >= 0) {
+//                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
+//                }
+//            }
+//            touchEvent=touchMoveOut;
+//        } else {
             [self changeRecordBgHighlight];
             if (touchEvent==touchMoveOut) {
                 if (recBtnMoveinIdcb >= 0) {
@@ -2333,18 +2640,18 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
                 }
             }
             touchEvent=touchMoveIn;
-        }
+//        }
     }else{
         CGPoint where = [t locationInView:_recordPanelBtn];
-        if (where.x<0 || where.x>_recordPanelBtn.bounds.size.width || where.y<0 || where.y>_recordPanelBtn.bounds.size.height) {
-            [self changeRecordBgNormal];
-            if (touchEvent != touchMoveOut) {
-                if (recBtnMoveoutIdcb >= 0) {
-                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
-                }
-            }
-            touchEvent=touchMoveOut;
-        } else {
+//        if (where.x<0 || where.x>_recordPanelBtn.bounds.size.width || where.y<0 || where.y>_recordPanelBtn.bounds.size.height) {
+//            [self changeRecordBgNormal];
+//            if (touchEvent != touchMoveOut) {
+//                if (recBtnMoveoutIdcb >= 0) {
+//                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
+//                }
+//            }
+//            touchEvent=touchMoveOut;
+//        } else {
             [self changeRecordBgHighlight];
             if (touchEvent==touchMoveOut) {
                 if (recBtnMoveinIdcb >= 0) {
@@ -2352,7 +2659,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
                 }
             }
             touchEvent=touchMoveIn;
-        }
+//        }
     }
 
 }
@@ -2444,7 +2751,6 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         if ([recordPanelView isKindOfClass:[UIImageView class]]) {
             UIImageView *tempRecordPanel = (UIImageView *)recordPanelView;
             tempRecordPanel.image = [UIImage imageWithContentsOfFile:activeRecordImg];
-            
         }
         
     }
@@ -2454,8 +2760,6 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
     if (tempLabel) {
         tempLabel.text = activeTitle;
     }
-    
-
 
 }
 

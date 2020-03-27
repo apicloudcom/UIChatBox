@@ -7,5 +7,15 @@
 
 #import "UZModule.h"
 
+@protocol UZWebBrowserProtocol <NSObject>
+
+@property (nonatomic, readonly) UIScrollView *scrollView;
+@property (nonatomic) BOOL scalesPageToFit;
+
+- (void)loadRequest:(NSURLRequest *)request;
+- (void)loadHTMLString:(NSString *)string baseURL:(nullable NSURL *)baseURL;
+
+@end
+
 @interface UZUIChatBox : UZModule
 @end
