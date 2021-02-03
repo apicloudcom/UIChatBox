@@ -71,7 +71,6 @@ UIChatBox 模块是一个聊天输入框模块，开发者可自定义该输入�
 ## 模块接口
 
 <div id="open"></div>
-
 # **open**
 
 打开聊天输入框
@@ -147,7 +146,8 @@ styles：
     inputBar:{                          //（可选项）JSON对象；输入区域（输入框及两侧按钮）整体样式      
         borderColor: '#d9d9d9',         //（可选项）字符串类型；输入框区域上下边框的颜色，支持 rgb，rgba，#；默认：'#d9d9d9'
         bgColor: '#f2f2f2',             //（可选项）字符串类型；输入框区域的整体背景色，支持 rgb，rgba，#；默认：'#f2f2f2'
-	textColor:'#000',               //（可选项）字符串类型；输入文字的颜色；默认：#000
+	textColor:'#000',               //（可选项）字符串类型；输入文字的颜色；默认：#000，支持 rgb，rgba，#；默认：'#f2f2f2'
+	placeholderColor:'',            //（可选项）字符串类型；提示文字的颜色；默认：系统默认，支持 rgb，rgba，#；默认：'#f2f2f2'
 	textSize:16,                    //（可选项）数字类型；默认：16
 	textMarginLeft:5                //（可选项）数字类型；光标距离左边框的距离，默认：5
     },
@@ -233,7 +233,17 @@ extras：
         title: '图片',              //（可选项）字符串类型；附加功能按钮的标题内容                  
         normalImg: '',              //（可选项）字符串类型；按钮常态的背景图片（本地路径，fs://、widget://）
         activeImg: ''               //（可选项）字符串类型；按钮按下时的背景图片（本地路径，fs://、widget://）   
-    }]
+    }],
+    isCustom:false ,                //是否自定义附加面板上按钮图标和文字间距及其左右边距；如果为true时，isAdaptScreenSize，isCenterDisplay两个参数无效，margin参数有效。为false时isAdaptScreenSize，isCenterDisplay两个参数有效，margin参数无效 ；（暂时只支持iOS）
+    margin:{   //（暂时只支持iOS）
+   
+       horizontal ：20                //图标的水平间距
+       vertical：20              //标题与图标的间距
+       width:50,                 //图标的宽度（宽度高度一样）
+       titleHeight：标题的高度
+    },
+    gridHorizontalPadding:20,    // 网格水平内边距；数字类型；默认：0 （暂仅支持Android）
+    titleTopMargin:10            // 标题顶部边距（距离顶部图片）；数字类型；默认：0 （暂仅支持Android）  
 }
 ```
 
@@ -357,7 +367,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="close"></div>
-
 # **close**
 
 关闭聊天输入框
@@ -378,7 +387,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="show"></div>
-
 # **show**
 
 显示聊天输入框
@@ -399,7 +407,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="hide"></div>
-
 # **hide**
 
 隐藏聊天输入框
@@ -420,7 +427,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="popupKeyboard"></div>
-
 # **popupKeyboard**
 
 弹出键盘
@@ -441,7 +447,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="closeKeyboard"></div>
-
 # **closeKeyboard**
 
 收起键盘
@@ -462,7 +467,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="popupBoard"></div>
-
 # **popupBoard**
 
 弹出表情、附加功能面板
@@ -496,7 +500,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="closeBoard"></div>
-
 # **closeBoard**
 
 收起表情、附加功能面板
@@ -517,7 +520,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="value"></div>
-
 # **value**
 
 获取或设置聊天输入框的内容
@@ -571,7 +573,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="insertValue"></div>
-
 # **insertValue**
 
 向聊天输入框的指定位置插入内容
@@ -609,7 +610,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="addEventListener"></div>
-
 # **addEventListener**
 
 事件监听
@@ -698,7 +698,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="setPlaceholder"></div>
-
 # **setPlaceholder**
 
 重设聊天输入框的占位提示文本
@@ -728,7 +727,6 @@ iOS系统，Android系统
 可提供的1.0.0及更高版本
 
 <div id="reloadExtraBoard"></div>
-
 # **reloadExtraBoard**
 
 重新加载（刷新）附加功能面板，**open时必须添加附加功能按钮及其面板参数**
@@ -810,7 +808,6 @@ iOS系统，Android系统
 
 
 <div id="cancelRecord"></div>
-
 # **cancelRecord**
 
 取消录音
@@ -825,6 +822,38 @@ var UIChatBox = api.require('UIChatBox');
 UIChatBox.cancelRecord();
 ```
 
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.0及更高版本
+
+
+
+<div id="setInputBarBgColor"></div>
+# **setInputBarBgColor**
+
+这只面板的背景颜色
+
+setInputBarBgColor({params})
+
+## params
+
+color：
+
+- 类型：字符串类型
+- 描述：面板背景色
+- 默认值：'#f2f2f2'
+
+
+## 示例代码
+
+```js
+var UIChatBox = api.require('UIChatBox');
+UIChatBox.setInputBarBgColor({
+	color: '',
+});
+```
 ## 可用性
 
 iOS系统，Android系统

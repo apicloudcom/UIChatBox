@@ -10,5 +10,7 @@
 
 @interface UZUIChatBoxAttachment : NSTextAttachment
 @property (nonatomic, strong) NSString *emotionString;
+@property (nonatomic, strong) NSString *emojiRealPath;
+
 
 @end

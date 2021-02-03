@@ -45,7 +45,6 @@
 		03F962B51B4BE703006F9E28 /* NSDictionaryUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDictionaryUtils.h; sourceTree = "<group>"; };
 		03F962B61B4BE703006F9E28 /* UZAppUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZAppUtils.h; sourceTree = "<group>"; };
 		03F962B71B4BE703006F9E28 /* UZModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZModule.h; sourceTree = "<group>"; };
-		9EEA978E236844C5000B64D5 /* res_UIChatBox */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res_UIChatBox; path = ../../../modules/UIChatBox/res_UIChatBox; sourceTree = "<group>"; };
 		B67F64E01FF4D58F00F5A257 /* UZUIChatBoxAttachment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UZUIChatBoxAttachment.h; sourceTree = "<group>"; };
 		B67F64E11FF4D58F00F5A257 /* UZUIChatBoxAttachment.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UZUIChatBoxAttachment.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -64,7 +63,6 @@
 		03F962731B4BE603006F9E28 = {
 			isa = PBXGroup;
 			children = (
-				9EEA978E236844C5000B64D5 /* res_UIChatBox */,
 				03F962961B4BE65D006F9E28 /* headFiles */,
 				03F9627E1B4BE603006F9E28 /* UIChatBox */,
 				03F9628B1B4BE603006F9E28 /* UIChatBoxTests */,

@@ -80,6 +80,8 @@ typedef enum {
 
     BOOL isEmotionIsSelect;//
     BOOL isAdditionalIsSelect;//
+    
+    float inputBarWriteHeight;
 
 }
 
@@ -114,6 +116,9 @@ typedef enum {
 @property (nonatomic, assign) BOOL isStatusBarNormal;
 
 @property (nonatomic, strong) NSString *keyBoradTextColor;
+
+
+@property(nonatomic,strong)UIView*bgTempView;
 
 @end
 
@@ -150,6 +155,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 }
 
 - (id)initWithUZWebView:(UZWebView *)webView_ {
+    
     self = [super initWithUZWebView:webView_];
     if (self != nil) {
         [[ NSNotificationCenter defaultCenter ] addObserver : self selector : @selector (statusBarFrameWillChange:) name : UIApplicationWillChangeStatusBarFrameNotification object : nil ];
@@ -209,43 +215,28 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-//    float new = [[change valueForKey:@"new"] floatValue];
-//    float old = [[change valueForKey:@"old"] floatValue];
-//
-//    NSLog(@".....%f....%f...",new,old);
-//
-//    if (new != old){
-//        NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:2];
-//        if ([keyPath isEqualToString:@"currentInputfeildHeight"]) {
-//            if (inputBoxChangeIdcb >= 0) {
-//                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-//                [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-//                [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
-//            }
-//            CGRect rect = btnSuperView.frame;
-//            rect.origin.y = _chatBgView.bounds.size.height - self.chatH;
-//            [UIView beginAnimations:nil context:nil];
-//            [UIView setAnimationDuration:0.3];
-//            btnSuperView.frame = rect;
-//            [UIView commitAnimations];
-//        }
-//        if ([keyPath isEqualToString:@"currentChatViewHeight"]) {
-//            if (inputBarMoveIdcb >= 0) {
-//                [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-//                [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-//                [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
-////                [addlistenerContext callbackWithRet:dict err:nil delete:NO];
-//            }
-//        }
-//    }
-//
+
 }
 
 #pragma mark-
 #pragma mark interface
 #pragma mark-
 
+//- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
+//    return YES;
+//}
+//- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer{
+//    return YES;
+//}
+
+-(void)jsmethod_setInputBarBgColor:(UZModuleMethodContext*)context {
+    NSString*color = [context.param stringValueForKey:@"color" defaultValue:@"#f2f2f2"];
+    _boardBgColor = color;
+    _chatBgView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
+    self.bgTempView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
+}
 - (void)open:(NSDictionary *)paramDict_{
+    inputBarWriteHeight = 0;
     extrasBool = YES;
     emotionBool = YES;
     intervalePop = [paramDict_ floatValueForKey:@"delay" defaultValue:intervalePop];
@@ -339,9 +330,12 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     singleTap.numberOfTapsRequired = 1;
 //    UIWebView *superWebView = (UIWebView *)self.uzWebView;
     Class cls = NSClassFromString([NSString stringWithFormat:@"%@%@", @"UI", @"WebView"]);
+
     UIView<UZWebBrowserProtocol> *superWebView = [[cls alloc]init];
     superWebView = ( UIView<UZWebBrowserProtocol> *)self.uzWebView;
     [superWebView.scrollView addGestureRecognizer:singleTap];
+    
+    
     //输入框背景承载视图
     _chatBgView = [[UIView alloc]init];
     if (KIsiPhoneX) {
@@ -397,11 +391,11 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     
 
     //表情面板、附加功能面板底板
-    UIView *bgTempView = [[UIView alloc]init];
-    bgTempView.frame = CGRectMake(0, 0, windowSize.height, 456);
-    bgTempView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
-    bgTempView.tag = TagBoardBG;
-    [_chatBgView addSubview:bgTempView];
+    self.bgTempView = [[UIView alloc]init];
+    self.bgTempView.frame = CGRectMake(0, 0, windowSize.height, 456);
+    self.bgTempView.backgroundColor = [UZAppUtils colorFromNSString:_boardBgColor];
+    self.bgTempView.tag = TagBoardBG;
+    [_chatBgView addSubview:self.bgTempView];
     //按钮的父view
     btnSuperView = [[UIView alloc]initWithFrame:_chatBgView.bounds];
     btnSuperView.backgroundColor = [UIColor clearColor];
@@ -432,7 +426,10 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         [_chatBgView addSubview:bgImgView];
         
     }
+    
     //附加功能
+    //    UIChatBox模块附加面板上按钮图标和文字间距及其左右边距自定义
+
     NSDictionary *extrasBtnStyle = [styles dictValueForKey:@"extrasBtn" defaultValue:nil];
     NSDictionary *extrasInfo = [paramDict_ dictValueForKey:@"extras" defaultValue:@{}];
     if (extrasBtnStyle) {
@@ -862,7 +859,24 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 }
 
 - (void)insertValue:(NSDictionary *)paramsDict_ {
-    NSString *tempStr = _textView.text;
+    //回调给前端
+    NSMutableString *strM = [NSMutableString string];
+    //__block NSString *string ;
+    [_textView.attributedText enumerateAttributesInRange:NSMakeRange(0, _textView.attributedText.length) options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        NSString *str = nil;
+        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];
+        if (attachment) { // 表情
+            str = attachment.emotionString ;
+            [strM appendString:str];
+        }
+        else { // 文字
+            str = [_textView.attributedText.string substringWithRange:range];
+            [strM appendString:str];
+        }
+    }];
+    NSString *willSendText = strM;
+    
+    NSString *tempStr = willSendText;
     NSString *msgStr = [paramsDict_ stringValueForKey:@"msg" defaultValue:@""];
     if (tempStr.length==0) {
         _textView.text = msgStr;
@@ -880,7 +894,176 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     _textView.text = strL;
     [self textViewDidChange:_textView];
 }
+- (void)insertValueTest:(NSDictionary *)paramsDict_ {
+    //回调给前端
+    NSMutableString *strM = [NSMutableString string];
+    //__block NSString *string ;
+    [_textView.attributedText enumerateAttributesInRange:NSMakeRange(0, _textView.attributedText.length) options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        NSString *str = nil;
+        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];
+        if (attachment) { // 表情
+            str = attachment.emotionString ;
+            [strM appendString:str];
+        }
+        else { // 文字
+            str = [_textView.attributedText.string substringWithRange:range];
+            [strM appendString:str];
+        }
+    }];
+    NSString *willSendText = strM;
+//    NSString *willSendText = _textView.text;
+//    NSAttributedString *willSendText = _textView.attributedText;
+//    ssss
+    
+    NSString *tempStr = willSendText;
+    NSString *msgStr = [paramsDict_ stringValueForKey:@"msg" defaultValue:@""];
+    if (tempStr.length==0) {
+        _textView.text = msgStr;
+    }
+    NSInteger index = [paramsDict_ integerValueForKey:@"index" defaultValue:tempStr.length];
+    if (index<0) {
+        index = 0;
+    }
+    if (index>tempStr.length) {
+        index = tempStr.length;
+    }
+    NSString *str1 = [tempStr substringToIndex:index];
+    NSString *str2 = [tempStr substringFromIndex:index];
+    NSString *strL = [NSString stringWithFormat:@"%@%@%@",str1,msgStr,str2];
+    _textView.text = strL;
+    [self textViewDidChange:_textView];
+    
+//    [self creatTestin:_textView];
 
+}
+-(void)creatTestin:(UITextView*)textView{
+    NSLog(@"%@",textView.text);
+    CGSize windowSize = _chatBgView.superview.bounds.size;
+    
+    UZUIChatBoxTextView *tempView = (UZUIChatBoxTextView *)textView;
+    if (textView.text.length != 0) {//开始输入则占位提示文字消失
+        tempView.placeholder.text = nil;
+    } else if (self.placeholderStr) {//显示占位提示文字
+        tempView.placeholder.text = self.placeholderStr;
+    }
+    if([textView.text isEqualToString:@"\n"]){//点击了键盘上的发送按钮
+        textView.text = @"";
+        //点击了键盘上的发送按钮恢复占位提示文字
+        tempView.placeholder.text = self.placeholderStr;
+    }
+    
+    NSMutableString *strM = [NSMutableString string];
+    
+    [textView.attributedText enumerateAttributesInRange:NSMakeRange(0, textView.attributedText.length) options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        NSLog(@"----%@=====---",attrs);
+        NSString *str = nil;
+        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];
+        NSString*classname = NSStringFromClass([attrs[@"NSAttachment"] class]);
+        NSLog(@"=qwer==%@---",classname);
+        if (![classname containsString:@"UIDictationAttachment"] && ![classname containsString:@"UITextPlaceholderAttachment"] ) {
+            if (attachment) { // 表情
+                str = attachment.emotionString;
+                [strM appendString:str];
+            } else { // 文字
+                str = [textView.attributedText.string substringWithRange:range];
+                [strM appendString:str];
+            }
+        }
+        
+    }];
+    NSString *willSendText = strM;
+    if (valueChangedCbid >= 0) {//输入框内的值有变化则回调给相应监听
+        if (willSendText) {
+            [self sendResultEventWithCallbackId:valueChangedCbid dataDict:[NSDictionary dictionaryWithObject:willSendText forKey:@"value"] errDict:nil doDelete:NO];
+        } else {
+            [self sendResultEventWithCallbackId:valueChangedCbid dataDict:[NSDictionary dictionaryWithObject:@"" forKey:@"value"] errDict:nil doDelete:NO];
+        }
+    }
+    
+    //计算文本的高度
+    float fPadding = 8.0; // 8.0px x 2 文字和左右边框的间隙大小
+    CGSize constraint = CGSizeMake(textView.contentSize.width - fPadding, CGFLOAT_MAX);
+    //    CGSize sizeFrame = [textView.text sizeWithAttributes:]
+    CGSize sizeFrame = [strM sizeWithFont:textView.font constrainedToSize:constraint lineBreakMode:NSLineBreakByWordWrapping];//计算当前文本的frame
+    float height = sizeFrame.height + 8.0;// 加上文字和上下边框的间隙大小
+    CGRect beforTextRect = textView.frame;
+    BOOL isSmal = beforTextRect.size.height >= _maxHeight;//当前输入框高度小于最大值
+    if (height>_maxHeight && isSmal) {//大于最大值且当前输入框小则不改变输入框大小
+        if (height > 32) {//29.**;32 一行文字时的高度
+            if (_maxHeight == 32) {
+                return;
+            }
+        }//间隙正常
+        return;
+    }
+    if (height > _maxHeight) {
+        height = _maxHeight;
+    }
+    UIView *line = [_chatBgView viewWithTag:TagCutLineDown];//下分割线
+    CGRect lineRect = line.frame;
+    float changeHeight = 0;
+    if (height > 32.0) {//输入框内文字大于一行时
+        changeHeight = height - 32;//计算改变量
+        //重新调整textView内容承载框的高度
+        CGRect newRect = textView.frame;
+        newRect.size.height = height;
+        textView.frame = newRect;
+        //重置textBar的大小和位置
+        float x = _chatBgView.frame.origin.x;
+        float y = _chatBgView.frame.origin.y;
+        float w = _chatBgView.frame.size.width;
+        float h = self.chatH + changeHeight;
+        float changeY;
+        if (h == _chatBgView.frame.size.height) {
+            //保留使用
+        } else if (h < _chatBgView.frame.size.height) {
+            changeY = _chatBgView.frame.size.height - h;
+            y = _chatBgView.frame.origin.y + changeY;
+        } else {
+            changeY = h - _chatBgView.frame.size.height;
+            y = _chatBgView.frame.origin.y - changeY;
+        }
+        //animation
+        [UIView animateWithDuration:0.4 animations:^{
+            _chatBgView.frame = CGRectMake(x, y, w, h);
+        } completion:^(BOOL finish){
+
+        }];
+        self.currentInputfeildHeight = _chatBgView.frame.size.height;
+        self.currentChatViewHeight = windowSize.height-self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+
+    } else {//输入框内文字为一行时
+        height = 32.0;
+        //重新调整textView的高度
+        CGRect newTextRect = textView.frame;
+        newTextRect.size.height = height;
+        //重置输入框背景主板的大小和位置
+        float h = _chatBgView.frame.size.height;
+        if (h > self.chatH) {
+            float x = _chatBgView.frame.origin.x;
+            float y = _chatBgView.frame.origin.y + (h - self.chatH);
+            float w = _chatBgView.frame.size.width;
+            h = self.chatH;
+            [UIView beginAnimations:nil context:nil];
+            [UIView setAnimationDuration:0.3];
+            textView.frame = newTextRect;
+            _chatBgView.frame = CGRectMake(x, y, w, h);
+            [UIView commitAnimations];
+            self.currentInputfeildHeight = _chatBgView.frame.size.height;
+            self.currentChatViewHeight = windowSize.height - self.currentInputfeildHeight - _chatBgView.frame.origin.y;
+        }
+        //调整内容文本的上下间隙
+        CGSize textContentSize = textView.contentSize;
+        textContentSize.height =  textView.frame.size.height;
+        textView.contentSize = textContentSize;
+        UIEdgeInsets textContentInset = textView.contentInset;
+        textContentInset.top = -1.5;
+        textView.contentInset = textContentInset;
+    }
+    //下边框分割线
+    lineRect.origin.y = _chatBgView.frame.size.height - 1;
+    line.frame = lineRect;
+}
 - (void)addEventListener:(NSDictionary *)paramsDict_ {
 
 //-(void)jsmethod_addEventListener:(UZModuleMethodContext*)context {
@@ -1467,7 +1650,6 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
         }
         
         if (inputBarMoveIdcb >= 0) {
-    //        ssss
             NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
 
             [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
@@ -1502,7 +1684,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
             CGSize windowSize = _chatBgView.superview.frame.size;
             CGRect tabBarFrame = CGRectMake(0, windowSize.height-_chatBgView.frame.size.height, windowSize.width, _chatBgView.frame.size.height);
             
-            if ([_textView resignFirstResponder] == NO) {
+            if ([_textView resignFirstResponder] == NO && self.currentChatViewHeight != 0) {
+                
                if ([eventTypeChange isEqualToString:@"change"]) {
                    NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
                    [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
@@ -1515,6 +1698,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                    [dict setObject:[NSNumber numberWithFloat:0] forKey:@"panelHeight"];
                    [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
                }
+                 
+                 
            }
             //下移输入框
             [_textView resignFirstResponder];
@@ -1779,7 +1964,173 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 }
 
+//- (void)drawExtraBoard:(NSDictionary *)extrasInfo {
+//    //    UIChatBox模块附加面板上按钮图标和文字间距及其左右边距自定义
+//    CGSize windowSize = _chatBgView.superview.bounds.size;
+//    NSArray *btnsAry = [extrasInfo arrayValueForKey:@"btns" defaultValue:nil];
+//    BOOL isAdaptScreenSize = [extrasInfo boolValueForKey:@"isAdaptScreenSize" defaultValue:true];
+//    BOOL isCenterDisplay = [extrasInfo boolValueForKey:@"isCenterDisplay" defaultValue:false];
+//    if (![btnsAry isKindOfClass:[NSArray class]] || btnsAry.count==0) {
+//        return;
+//    }
+//    _extrasBoard = [[UIView alloc]init];
+//    _extrasBoard.frame = CGRectMake(0, windowSize.height,windowSize.width , 216);
+//    _extrasBoard.backgroundColor = [UZAppUtils colorFromNSString:_boardColor];
+//    [self addSubview:_extrasBoard fixedOn:_viewName fixed:YES];
+//    //计算每行按钮个数
+//    int btnNum = 0;  float pageNumtemp; NSInteger pageNumAdd;  float verInterval;
+//    if (!isCenterDisplay) {
+//        if (isAdaptScreenSize) {
+//            btnNum = getUIRowCountWith(windowSize.width, 60);
+//        }else{
+//            btnNum = 4;
+//        }
+//        //计算有几屏幕显示
+//        pageNumtemp = btnsAry.count/(2.0*btnNum);
+//        pageNumAdd = btnsAry.count/(2*btnNum);
+//        if ((pageNumtemp - pageNumAdd) > 0) {
+//            pageNumAdd ++;
+//        }
+//        //计算按钮间隙
+//       verInterval = (windowSize.width - 60*btnNum)/(btnNum + 1);
+//    }else{
+//        btnNum = 2;
+//        //计算有几屏幕显示
+//        pageNumtemp = btnsAry.count/(btnNum);
+//        pageNumAdd = btnsAry.count/(btnNum);
+//        if ((pageNumtemp - pageNumAdd) > 0) {
+//            pageNumAdd ++;
+//        }
+//        //计算按钮间隙
+//        verInterval = (windowSize.width - 80*btnNum)/(btnNum + 1);
+//    }
+//
+//
+//
+//    //添加页码控制器
+//    self.pageControlExtra = [[UIPageControl alloc]initWithFrame:CGRectMake(0,216-20,126,20)];
+//    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
+//        [pageControlExtra setCurrentPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgActiveColor]];
+//        [pageControlExtra setPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgColor]];
+//    }
+//    pageControlExtra.numberOfPages = pageNumAdd;
+//    pageControlExtra.currentPage = 0;
+//    [pageControlExtra addTarget:self action:@selector(turnPageAdd) forControlEvents:UIControlEventValueChanged];
+//    if (showPgControll==both || showPgControll==emotionBoard) {
+//        if (pageNumAdd > 1) {
+//            self.pageControlExtra.center = CGPointMake(windowSize.width/2.0, 216-20);
+//            [_extrasBoard addSubview:pageControlExtra];
+//        }
+//    }
+//    //添加滚动视图
+//    UIScrollView *addSource = [[UIScrollView alloc]initWithFrame:_extrasBoard.bounds];
+//    addSource.backgroundColor = [UIColor clearColor];
+//    addSource.bounces = NO;
+//    addSource.scrollsToTop = NO;
+//    addSource.delegate = self;
+//    addSource.pagingEnabled = YES;
+//    addSource.showsVerticalScrollIndicator = NO;
+//    addSource.showsHorizontalScrollIndicator = NO;
+//    addSource.tag = TagExtraBoard;
+//    [_extrasBoard addSubview:addSource];
+//    [addSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumAdd, 216)];
+//
+//    NSString *titleColor = [extrasInfo stringValueForKey:@"titleColor" defaultValue:nil];
+//    if (![titleColor isKindOfClass:[NSString class]] || titleColor.length<=0) {
+//        titleColor = @"#A3A3A3";
+//    }
+//    float titleSize = [extrasInfo floatValueForKey:@"titleSize" defaultValue:10];
+//    if (titleSize==0) {
+//        titleSize =10;
+//    }
+//    //往滚动视图添加按钮
+//    if (isCenterDisplay) {
+//
+//        for (int i=0; i<pageNumAdd; i++) {//页循环
+//            for (int j=0; j<1; j++) {//行循环
+//                for (int g=0; g<2; g++) {//列循环
+//                    int the = btnNum*i+j*btnNum+g;
+//                    if (the >= btnsAry.count) {
+//                        return;
+//                    }
+//                    float origY =(216-85)/2 ;
+//                    NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
+//                    NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
+//                    NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
+//                    NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
+//                    UIView *backView = [[UIView alloc]initWithFrame:CGRectMake(_mainScreenWidth*i+verInterval+(80+verInterval)*g, origY, 85, 85)];
+//                    backView.backgroundColor = [UIColor clearColor];
+//                    [addSource addSubview:backView];
+//
+//                    UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+//                    detailBtn.frame = CGRectMake(12.5, 0, 60, 60);
+//                    if (normalImg) {
+//                        NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
+//                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
+//                        NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
+//                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
+//                    }else{
+//                        [detailBtn setBackgroundColor:[UIColor greenColor]];
+//                    }
+//                    [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
+//                    detailBtn.tag = the;
+//                    [backView addSubview:detailBtn];
+//                    UILabel *titleLabel = [[UILabel alloc]init];
+//                    titleLabel.backgroundColor = [UIColor clearColor];
+//                    titleLabel.frame = CGRectMake(12.5, 65, 60, 20);
+//                    titleLabel.text = title;
+//                    titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
+//                    titleLabel.font = [UIFont systemFontOfSize:titleSize];
+//                    titleLabel.textAlignment = NSTextAlignmentCenter;
+//                    [backView addSubview:titleLabel];
+//                }
+//            }
+//        }
+//    }else{
+//        for (int i=0; i<pageNumAdd; i++) {//页循环
+//            for (int j=0; j<2; j++) {//行循环
+//                for (int g=0; g<btnNum; g++) {//列循环
+//                    int the = 2*btnNum*i+j*btnNum+g;
+//                    if (the >= btnsAry.count) {
+//                        return;
+//                    }
+//                    float origY;
+//                    if (j==0) { origY =15; }else{ origY =15+60+20+11; }
+//                    NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
+//                    NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
+//                    NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
+//                    NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
+//                    UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+//                    detailBtn.frame = CGRectMake(_mainScreenWidth*i+verInterval+(60+verInterval)*g, origY, 60, 60);
+//                    if (normalImg) {
+//                        NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
+//                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
+//                        NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
+//                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
+//                    }else{
+//                        [detailBtn setBackgroundColor:[UIColor greenColor]];
+//                    }
+//                    [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
+//                    detailBtn.tag = the;
+//                    [addSource addSubview:detailBtn];
+//                    UILabel *titleLabel = [[UILabel alloc]init];
+//                    titleLabel.backgroundColor = [UIColor clearColor];
+//                    titleLabel.frame = CGRectMake(detailBtn.frame.origin.x, detailBtn.frame.origin.y+detailBtn.frame.size.height+5.0, 60, 20);
+//                    titleLabel.text = title;
+//                    titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
+//                    titleLabel.font = [UIFont systemFontOfSize:titleSize];
+//                    titleLabel.textAlignment = NSTextAlignmentCenter;
+//                    [addSource addSubview:titleLabel];
+//                }
+//            }
+//        }
+//    }
+
+//}
+
+//新的自定义
 - (void)drawExtraBoard:(NSDictionary *)extrasInfo {
+    //    UIChatBox模块附加面板上按钮图标和文字间距及其左右边距自定义
     CGSize windowSize = _chatBgView.superview.bounds.size;
     NSArray *btnsAry = [extrasInfo arrayValueForKey:@"btns" defaultValue:nil];
     BOOL isAdaptScreenSize = [extrasInfo boolValueForKey:@"isAdaptScreenSize" defaultValue:true];
@@ -1791,116 +2142,69 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     _extrasBoard.frame = CGRectMake(0, windowSize.height,windowSize.width , 216);
     _extrasBoard.backgroundColor = [UZAppUtils colorFromNSString:_boardColor];
     [self addSubview:_extrasBoard fixedOn:_viewName fixed:YES];
-    //计算每行按钮个数
-    int btnNum = 0;  float pageNumtemp; NSInteger pageNumAdd;  float verInterval;
-    if (!isCenterDisplay) {
-        if (isAdaptScreenSize) {
-            btnNum = getUIRowCountWith(windowSize.width, 60);
-        }else{
-            btnNum = 4;
-        }
-        //计算有几屏幕显示
-        pageNumtemp = btnsAry.count/(2.0*btnNum);
-        pageNumAdd = btnsAry.count/(2*btnNum);
-        if ((pageNumtemp - pageNumAdd) > 0) {
-            pageNumAdd ++;
-        }
-        //计算按钮间隙
-       verInterval = (windowSize.width - 60*btnNum)/(btnNum + 1);
-    }else{
-        btnNum = 2;
-        //计算有几屏幕显示
-        pageNumtemp = btnsAry.count/(btnNum);
-        pageNumAdd = btnsAry.count/(btnNum);
-        if ((pageNumtemp - pageNumAdd) > 0) {
-            pageNumAdd ++;
-        }
-        //计算按钮间隙
-        verInterval = (windowSize.width - 80*btnNum)/(btnNum + 1);
-    }
-   
     
+    BOOL isCustom = [extrasInfo boolValueForKey:@"isCustom" defaultValue:false];
+    if (isCustom == true) {
+        NSDictionary *marginDict = [extrasInfo dictValueForKey:@"margin" defaultValue:@{}];
+        CGFloat btnwidth = [marginDict floatValueForKey:@"width" defaultValue:60];
+        //水平边距
+        CGFloat btnhorizontal = [marginDict floatValueForKey:@"horizontal" defaultValue:20];
+        //垂直边距
+        CGFloat btnvertical = [marginDict floatValueForKey:@"vertical" defaultValue:5];
+        CGFloat titleHeight = [marginDict floatValueForKey:@"titleHeight" defaultValue:20];
 
-    //添加页码控制器
-    self.pageControlExtra = [[UIPageControl alloc]initWithFrame:CGRectMake(0,216-20,126,20)];
-    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
-        [pageControlExtra setCurrentPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgActiveColor]];
-        [pageControlExtra setPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgColor]];
-    }
-    pageControlExtra.numberOfPages = pageNumAdd;
-    pageControlExtra.currentPage = 0;
-    [pageControlExtra addTarget:self action:@selector(turnPageAdd) forControlEvents:UIControlEventValueChanged];
-    if (showPgControll==both || showPgControll==emotionBoard) {
-        if (pageNumAdd > 1) {
-            self.pageControlExtra.center = CGPointMake(windowSize.width/2.0, 216-20);
-            [_extrasBoard addSubview:pageControlExtra];
+        //计算每行按钮个数
+        int btnNum = 0;  float pageNumtemp; NSInteger pageNumAdd;  float verInterval;
+
+        btnNum = windowSize.width/(btnwidth+btnhorizontal);
+        NSLog(@"=ssssssss==%d---",btnNum);
+            //计算有几屏幕显示
+            pageNumtemp = btnsAry.count/(2.0*btnNum);
+            pageNumAdd = btnsAry.count/(2*btnNum);
+            if ((pageNumtemp - pageNumAdd) > 0) {
+                pageNumAdd ++;
+            }
+        NSLog(@"-----dddddd--%ld--",(long)pageNumAdd);
+            //计算按钮间隙
+        verInterval = btnhorizontal;
+        //添加页码控制器
+        self.pageControlExtra = [[UIPageControl alloc]initWithFrame:CGRectMake(0,216-20,126,20)];
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
+            [pageControlExtra setCurrentPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgActiveColor]];
+            [pageControlExtra setPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgColor]];
         }
-    }
-    //添加滚动视图
-    UIScrollView *addSource = [[UIScrollView alloc]initWithFrame:_extrasBoard.bounds];
-    addSource.backgroundColor = [UIColor clearColor];
-    addSource.bounces = NO;
-    addSource.scrollsToTop = NO;
-    addSource.delegate = self;
-    addSource.pagingEnabled = YES;
-    addSource.showsVerticalScrollIndicator = NO;
-    addSource.showsHorizontalScrollIndicator = NO;
-    addSource.tag = TagExtraBoard;
-    [_extrasBoard addSubview:addSource];
-    [addSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumAdd, 216)];
-    
-    NSString *titleColor = [extrasInfo stringValueForKey:@"titleColor" defaultValue:nil];
-    if (![titleColor isKindOfClass:[NSString class]] || titleColor.length<=0) {
-        titleColor = @"#A3A3A3";
-    }
-    float titleSize = [extrasInfo floatValueForKey:@"titleSize" defaultValue:10];
-    if (titleSize==0) {
-        titleSize =10;
-    }
-    //往滚动视图添加按钮
-    if (isCenterDisplay) {
-        
-        for (int i=0; i<pageNumAdd; i++) {//页循环
-            for (int j=0; j<1; j++) {//行循环
-                for (int g=0; g<2; g++) {//列循环
-                    int the = btnNum*i+j*btnNum+g;
-                    if (the >= btnsAry.count) {
-                        return;
-                    }
-                    float origY =(216-85)/2 ;
-                    NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
-                    NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
-                    NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
-                    NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
-                    UIView *backView = [[UIView alloc]initWithFrame:CGRectMake(_mainScreenWidth*i+verInterval+(80+verInterval)*g, origY, 85, 85)];
-                    backView.backgroundColor = [UIColor clearColor];
-                    [addSource addSubview:backView];
-                    
-                    UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                    detailBtn.frame = CGRectMake(12.5, 0, 60, 60);
-                    if (normalImg) {
-                        NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
-                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
-                        NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
-                        [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
-                    }else{
-                        [detailBtn setBackgroundColor:[UIColor greenColor]];
-                    }
-                    [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
-                    detailBtn.tag = the;
-                    [backView addSubview:detailBtn];
-                    UILabel *titleLabel = [[UILabel alloc]init];
-                    titleLabel.backgroundColor = [UIColor clearColor];
-                    titleLabel.frame = CGRectMake(12.5, 65, 60, 20);
-                    titleLabel.text = title;
-                    titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
-                    titleLabel.font = [UIFont systemFontOfSize:titleSize];
-                    titleLabel.textAlignment = NSTextAlignmentCenter;
-                    [backView addSubview:titleLabel];
-                }
+        pageControlExtra.numberOfPages = pageNumAdd;
+        pageControlExtra.currentPage = 0;
+        [pageControlExtra addTarget:self action:@selector(turnPageAdd) forControlEvents:UIControlEventValueChanged];
+        if (showPgControll==both || showPgControll==emotionBoard) {
+            if (pageNumAdd > 1) {
+                self.pageControlExtra.center = CGPointMake(windowSize.width/2.0, 216-20);
+                [_extrasBoard addSubview:pageControlExtra];
             }
         }
-    }else{
+        //添加滚动视图
+        UIScrollView *addSource = [[UIScrollView alloc]initWithFrame:_extrasBoard.bounds];
+        addSource.backgroundColor = [UIColor clearColor];
+        addSource.bounces = NO;
+        addSource.scrollsToTop = NO;
+        addSource.delegate = self;
+        addSource.pagingEnabled = YES;
+        addSource.showsVerticalScrollIndicator = NO;
+        addSource.showsHorizontalScrollIndicator = NO;
+        addSource.tag = TagExtraBoard;
+        [_extrasBoard addSubview:addSource];
+        [addSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumAdd, 216)];
+        
+        NSString *titleColor = [extrasInfo stringValueForKey:@"titleColor" defaultValue:nil];
+        if (![titleColor isKindOfClass:[NSString class]] || titleColor.length<=0) {
+            titleColor = @"#A3A3A3";
+        }
+        float titleSize = [extrasInfo floatValueForKey:@"titleSize" defaultValue:10];
+        if (titleSize==0) {
+            titleSize =10;
+        }
+        //往滚动视图添加按钮
+        
         for (int i=0; i<pageNumAdd; i++) {//页循环
             for (int j=0; j<2; j++) {//行循环
                 for (int g=0; g<btnNum; g++) {//列循环
@@ -1909,13 +2213,17 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                         return;
                     }
                     float origY;
-                    if (j==0) { origY =15; }else{ origY =15+60+20+11; }
+                    //                        if (j==0) { origY =15; }else{ origY =15+60+20+11; }
+                    if (j==0) { origY =15; }else{ origY =15+btnwidth+btnvertical+titleHeight+11; }
+                    
                     NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
                     NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
                     NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
                     NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
                     UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-                    detailBtn.frame = CGRectMake(_mainScreenWidth*i+verInterval+(60+verInterval)*g, origY, 60, 60);
+                    //                        detailBtn.frame = CGRectMake(_mainScreenWidth*i+verInterval+(60+verInterval)*g, origY, 60, 60);
+                    CGFloat leftMargin = (_mainScreenWidth-btnNum*btnwidth-(btnNum-1)*btnhorizontal)/2;
+                    detailBtn.frame = CGRectMake(_mainScreenWidth*i+leftMargin+(btnwidth+btnhorizontal)*g, origY, btnwidth, btnwidth);
                     if (normalImg) {
                         NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
                         [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
@@ -1929,7 +2237,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                     [addSource addSubview:detailBtn];
                     UILabel *titleLabel = [[UILabel alloc]init];
                     titleLabel.backgroundColor = [UIColor clearColor];
-                    titleLabel.frame = CGRectMake(detailBtn.frame.origin.x, detailBtn.frame.origin.y+detailBtn.frame.size.height+5.0, 60, 20);
+                    titleLabel.frame = CGRectMake(detailBtn.frame.origin.x, detailBtn.frame.origin.y+detailBtn.frame.size.height+btnvertical, btnwidth, titleHeight);
+//                    titleLabel.backgroundColor = [UIColor redColor];
                     titleLabel.text = title;
                     titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
                     titleLabel.font = [UIFont systemFontOfSize:titleSize];
@@ -1938,10 +2247,160 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
                 }
             }
         }
+        
     }
-    
-}
+    else{
+        //计算每行按钮个数
+        int btnNum = 0;  float pageNumtemp; NSInteger pageNumAdd;  float verInterval;
+        if (!isCenterDisplay) {
+            if (isAdaptScreenSize) {
+                btnNum = getUIRowCountWith(windowSize.width, 60);
+            }else{
+                btnNum = 4;
+            }
+            //计算有几屏幕显示
+            pageNumtemp = btnsAry.count/(2.0*btnNum);
+            pageNumAdd = btnsAry.count/(2*btnNum);
+            if ((pageNumtemp - pageNumAdd) > 0) {
+                pageNumAdd ++;
+            }
+            //计算按钮间隙
+           verInterval = (windowSize.width - 60*btnNum)/(btnNum + 1);
+        }else{
+            btnNum = 2;
+            //计算有几屏幕显示
+            pageNumtemp = btnsAry.count/(btnNum);
+            pageNumAdd = btnsAry.count/(btnNum);
+            if ((pageNumtemp - pageNumAdd) > 0) {
+                pageNumAdd ++;
+            }
+            //计算按钮间隙
+            verInterval = (windowSize.width - 80*btnNum)/(btnNum + 1);
+        }
 
+        //添加页码控制器
+        self.pageControlExtra = [[UIPageControl alloc]initWithFrame:CGRectMake(0,216-20,126,20)];
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 6.0) {
+            [pageControlExtra setCurrentPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgActiveColor]];
+            [pageControlExtra setPageIndicatorTintColor:[UZAppUtils colorFromNSString:_pgColor]];
+        }
+        pageControlExtra.numberOfPages = pageNumAdd;
+        pageControlExtra.currentPage = 0;
+        [pageControlExtra addTarget:self action:@selector(turnPageAdd) forControlEvents:UIControlEventValueChanged];
+        if (showPgControll==both || showPgControll==emotionBoard) {
+            if (pageNumAdd > 1) {
+                self.pageControlExtra.center = CGPointMake(windowSize.width/2.0, 216-20);
+                [_extrasBoard addSubview:pageControlExtra];
+            }
+        }
+        //添加滚动视图
+        UIScrollView *addSource = [[UIScrollView alloc]initWithFrame:_extrasBoard.bounds];
+        addSource.backgroundColor = [UIColor clearColor];
+        addSource.bounces = NO;
+        addSource.scrollsToTop = NO;
+        addSource.delegate = self;
+        addSource.pagingEnabled = YES;
+        addSource.showsVerticalScrollIndicator = NO;
+        addSource.showsHorizontalScrollIndicator = NO;
+        addSource.tag = TagExtraBoard;
+        [_extrasBoard addSubview:addSource];
+        [addSource setContentSize:CGSizeMake(_mainScreenWidth*pageNumAdd, 216)];
+
+        NSString *titleColor = [extrasInfo stringValueForKey:@"titleColor" defaultValue:nil];
+        if (![titleColor isKindOfClass:[NSString class]] || titleColor.length<=0) {
+            titleColor = @"#A3A3A3";
+        }
+        float titleSize = [extrasInfo floatValueForKey:@"titleSize" defaultValue:10];
+        if (titleSize==0) {
+            titleSize =10;
+        }
+        //往滚动视图添加按钮
+        if (isCenterDisplay) {
+
+            for (int i=0; i<pageNumAdd; i++) {//页循环
+                for (int j=0; j<1; j++) {//行循环
+                    for (int g=0; g<2; g++) {//列循环
+                        int the = btnNum*i+j*btnNum+g;
+                        if (the >= btnsAry.count) {
+                            return;
+                        }
+                        float origY =(216-85)/2 ;
+                        NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
+                        NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
+                        NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
+                        NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
+                        UIView *backView = [[UIView alloc]initWithFrame:CGRectMake(_mainScreenWidth*i+verInterval+(80+verInterval)*g, origY, 85, 85)];
+                        backView.backgroundColor = [UIColor clearColor];
+                        [addSource addSubview:backView];
+
+                        UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+                        detailBtn.frame = CGRectMake(12.5, 0, 60, 60);
+                        if (normalImg) {
+                            NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
+                            [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
+                            NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
+                            [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
+                        }else{
+                            [detailBtn setBackgroundColor:[UIColor greenColor]];
+                        }
+                        [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
+                        detailBtn.tag = the;
+                        [backView addSubview:detailBtn];
+                        UILabel *titleLabel = [[UILabel alloc]init];
+                        titleLabel.backgroundColor = [UIColor clearColor];
+                        titleLabel.frame = CGRectMake(12.5, 65, 60, 20);
+                        titleLabel.text = title;
+                        titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
+                        titleLabel.font = [UIFont systemFontOfSize:titleSize];
+                        titleLabel.textAlignment = NSTextAlignmentCenter;
+                        [backView addSubview:titleLabel];
+                    }
+                }
+            }
+        }else{
+            for (int i=0; i<pageNumAdd; i++) {//页循环
+                for (int j=0; j<2; j++) {//行循环
+                    for (int g=0; g<btnNum; g++) {//列循环
+                        int the = 2*btnNum*i+j*btnNum+g;
+                        if (the >= btnsAry.count) {
+                            return;
+                        }
+                        float origY;
+                        if (j==0) { origY =15; }else{ origY =15+60+20+11; }
+                        NSDictionary *btnInfo = [btnsAry objectAtIndex:the];
+                        NSString *normalImg = [btnInfo stringValueForKey:@"normalImg" defaultValue:nil];
+                        NSString *highlightImg = [btnInfo stringValueForKey:@"activeImg" defaultValue:nil];
+                        NSString *title = [btnInfo stringValueForKey:@"title" defaultValue:nil];
+                        UIButton *detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+                        detailBtn.frame = CGRectMake(_mainScreenWidth*i+verInterval+(60+verInterval)*g, origY, 60, 60);
+                        if (normalImg) {
+                            NSString *realNormPath = [self getPathWithUZSchemeURL:normalImg];
+                            [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realNormPath] forState:UIControlStateNormal];
+                            NSString *realhighPath = [self getPathWithUZSchemeURL:highlightImg];
+                            [detailBtn setBackgroundImage:[UIImage imageWithContentsOfFile:realhighPath] forState:UIControlStateHighlighted];
+                        }else{
+                            [detailBtn setBackgroundColor:[UIColor greenColor]];
+                        }
+                        [detailBtn addTarget:self action:@selector(extrasBoardClick:) forControlEvents:UIControlEventTouchUpInside];
+                        detailBtn.tag = the;
+                        [addSource addSubview:detailBtn];
+                        UILabel *titleLabel = [[UILabel alloc]init];
+                        titleLabel.backgroundColor = [UIColor clearColor];
+                        titleLabel.frame = CGRectMake(detailBtn.frame.origin.x, detailBtn.frame.origin.y+detailBtn.frame.size.height+5.0, 60, 20);
+                        titleLabel.text = title;
+                        titleLabel.textColor = [UZAppUtils colorFromNSString:titleColor];
+                        titleLabel.font = [UIFont systemFontOfSize:titleSize];
+                        titleLabel.textAlignment = NSTextAlignmentCenter;
+                        [addSource addSubview:titleLabel];
+                    }
+                }
+            }
+        }
+
+        
+    }
+   
+}
 #pragma mark 面板内点击事件
 - (void)extrasBoardClick:(UIButton *)btn{
     NSMutableDictionary *sendDict = [NSMutableDictionary dictionaryWithCapacity:2];
@@ -1961,19 +2420,18 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 
 - (void)emotionBoardClick:(UIButton *)btn{
     NSRange range = [_textView selectedRange];
-    NSInteger index = range.location;
+//    NSInteger index = range.location;
     NSDictionary *emotionInfo = [self.sourceAry objectAtIndex:btn.tag-1];
     NSString *emojiPath = [emotionInfo objectForKey:@"name"];
     NSString *widgetPath = [NSString stringWithFormat:@"%@/%@.png",self.realImgPath,emojiPath];
     NSString *emojiRealPath = [NSString stringWithFormat:@"%@",[self getPathWithUZSchemeURL:widgetPath]];
     NSString *emotionStr = [emotionInfo stringValueForKey:@"text" defaultValue:@"[未知表情]"];
-    NSMutableString *tempStr = [NSMutableString stringWithString:_textView.text];
+//    NSMutableString *tempStr = [NSMutableString stringWithString:_textView.text];
     {
-        //NSString *str1 = [tempStr substringToIndex:index];
-        //NSString *str2 = [tempStr substringFromIndex:index];
-        //NSString *strL = [NSString stringWithFormat:@"%@%@%@",str1,emotionStr,str2];
+
         UZUIChatBoxAttachment *attachment = [[UZUIChatBoxAttachment alloc] init];
        attachment.emotionString = emotionStr;
+        attachment.emojiRealPath = emojiRealPath;
         attachment.image = [UIImage imageWithContentsOfFile:emojiRealPath];
         attachment.bounds = CGRectMake(0, -3, 18, 18);
         NSRange range = _textView.selectedRange;
@@ -2068,44 +2526,15 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
 }
 -(void)keyboardDidShow:(NSNotification*)noti{
 
-//    if ([eventTypeChange isEqualToString:@"change"]) {
-//        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
-//        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-//        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-//        [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
-//
-//    }
-//    else if ([eventTypeChange isEqualToString:@"move"]) {
-//         NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
-//         [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-//         [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-//         [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
-//
-//     }
-    
 }
 -(void)keyboardDidHide:(NSNotification*)noti{
     
-//
-//    if ([eventTypeChange isEqualToString:@"change"]) {
-//        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
-//        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-//        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-//        [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
-//
-//    }
-//    else if ([eventTypeChange isEqualToString:@"move"]) {
-//        NSMutableDictionary*dict = [[NSMutableDictionary alloc]init];
-//        [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
-//        [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
-//        [self sendResultEventWithCallbackId:inputBarMoveIdcb dataDict:dict errDict:nil doDelete:NO];
-//
-//    }
 
 }
 //当键退出时调用
 - (void)keyboardWillHide:(NSNotification *)aNotification {
     NSLog(@"键盘收回");
+    
 //    if (!isKeyboardShow) {
 //        return;
 //    }
@@ -2192,15 +2621,17 @@ int getUIRowCountWith(float screenWidth ,float sideLength);
     //__block NSString *string ;
     [_textView.attributedText enumerateAttributesInRange:NSMakeRange(0, _textView.attributedText.length) options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
         NSString *str = nil;
-        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];
-        if (attachment) { // 表情
-//            str = [attachment.emotionString substringFromIndex:attachment.emotionString.length];
-            str = attachment.emotionString ;
-           [strM appendString:str];
-        }
-        else { // 文字
-            str = [_textView.attributedText.string substringWithRange:range];
-            [strM appendString:str];
+        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];        
+        NSString*classname = NSStringFromClass([attrs[@"NSAttachment"] class]);
+        NSLog(@"=qwer==%@---",classname);
+        if (![classname containsString:@"UIDictationAttachment"] && ![classname containsString:@"UITextPlaceholderAttachment"] ) {
+            if (attachment) { // 表情
+                str = attachment.emotionString;
+                [strM appendString:str];
+            } else { // 文字
+                str = [_textView.attributedText.string substringWithRange:range];
+                [strM appendString:str];
+            }
         }
         
     }];
@@ -2390,6 +2821,18 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         [self send:nil];
         return NO;
     }
+    /*
+    float heighta = self.currentInputfeildHeight;
+    if (inputBarWriteHeight != 0) {
+        if (heighta != inputBarWriteHeight) {
+            NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+            [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+            [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+            [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+        }
+    }
+    inputBarWriteHeight = self.currentInputfeildHeight;
+     */
     return YES;
 }
 
@@ -2408,37 +2851,41 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         //点击了键盘上的发送按钮恢复占位提示文字
         tempView.placeholder.text = self.placeholderStr;
     }
+    
+    NSMutableString *strM = [NSMutableString string];
+
+    [textView.attributedText enumerateAttributesInRange:NSMakeRange(0, textView.attributedText.length) options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        NSLog(@"----%@=====---",attrs);
+        NSString *str = nil;
+        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];
+        NSString*classname = NSStringFromClass([attrs[@"NSAttachment"] class]);
+        NSLog(@"=qwer==%@---",classname);
+        if (![classname containsString:@"UIDictationAttachment"] && ![classname containsString:@"UITextPlaceholderAttachment"] ) {
+            if (attachment) { // 表情
+                str = attachment.emotionString;
+                [strM appendString:str];
+            } else { // 文字
+                str = [textView.attributedText.string substringWithRange:range];
+                [strM appendString:str];
+            }
+        }
+
+    }];
+    NSString *willSendText = strM;
     if (valueChangedCbid >= 0) {//输入框内的值有变化则回调给相应监听
-        NSString *text = textView.text;
-        if (text) {
-            [self sendResultEventWithCallbackId:valueChangedCbid dataDict:[NSDictionary dictionaryWithObject:text forKey:@"value"] errDict:nil doDelete:NO];
+        if (willSendText) {
+            [self sendResultEventWithCallbackId:valueChangedCbid dataDict:[NSDictionary dictionaryWithObject:willSendText forKey:@"value"] errDict:nil doDelete:NO];
         } else {
             [self sendResultEventWithCallbackId:valueChangedCbid dataDict:[NSDictionary dictionaryWithObject:@"" forKey:@"value"] errDict:nil doDelete:NO];
         }
     }
     
-    NSMutableString *strM = [NSMutableString string];
-
-    [textView.attributedText enumerateAttributesInRange:NSMakeRange(0, textView.attributedText.length) options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
-        NSString *str = nil;
-        UZUIChatBoxAttachment *attachment = attrs[@"NSAttachment"];
-        if (attachment) { // 表情
-//            str = attachment.emotionString;
-//              str = [attachment.emotionString substringFromIndex:attachment.emotionString.length-4];
-            str = @"[1]";
-            [strM appendString:str];
-        } else { // 文字
-            str = [textView.attributedText.string substringWithRange:range];
-            [strM appendString:str];
-        }
-
-    }];
-    
     //计算文本的高度
-    float fPadding = 8.0; // 8.0px x 2 文字和左右边框的间隙大小
-    CGSize constraint = CGSizeMake(textView.contentSize.width - fPadding, CGFLOAT_MAX);
+  //  float fPadding = 8.0; // 8.0px x 2 文字和左右边框的间隙大小
+   // CGSize constraint = CGSizeMake(textView.contentSize.width - fPadding, CGFLOAT_MAX);
 //    CGSize sizeFrame = [textView.text sizeWithAttributes:]
-    CGSize sizeFrame = [strM sizeWithFont:textView.font constrainedToSize:constraint lineBreakMode:NSLineBreakByWordWrapping];//计算当前文本的frame
+    //CGSize sizeFrame = [strM sizeWithFont:textView.font constrainedToSize:constraint lineBreakMode:NSLineBreakByWordWrapping];//计算当前文本的frame
+    CGSize sizeFrame = [textView sizeThatFits:CGSizeMake(textView.bounds.size.width, MAXFLOAT)];
     float height = sizeFrame.height + 8.0;// 加上文字和上下边框的间隙大小
     CGRect beforTextRect = textView.frame;
     BOOL isSmal = beforTextRect.size.height >= _maxHeight;//当前输入框高度小于最大值
@@ -2505,6 +2952,8 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         //NSLog(@"contentSize.height:%f",textView.contentSize.height);
         //NSLog(@"textView.contentInset.top:%f",textView.contentInset.top);
         //NSLog(@"contentOffset.y:%f",textView.contentOffset.y);
+
+        
     } else {//输入框内文字为一行时
         height = 32.0;
         //重新调整textView的高度
@@ -2533,6 +2982,19 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
         textContentInset.top = -1.5;
         textView.contentInset = textContentInset;
     }
+    
+    //换行时回调
+    float heighta = self.currentInputfeildHeight;
+    if (inputBarWriteHeight != 0) {
+        if (heighta != inputBarWriteHeight) {
+            NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+            [dict setObject:[NSNumber numberWithFloat:self.currentInputfeildHeight] forKey:@"inputBarHeight"];
+            [dict setObject:[NSNumber numberWithFloat:self.currentChatViewHeight] forKey:@"panelHeight"];
+            [self sendResultEventWithCallbackId:inputBoxChangeIdcb dataDict:dict errDict:nil doDelete:NO];
+        }
+    }
+    inputBarWriteHeight = self.currentInputfeildHeight;
+     
     //下边框分割线
     lineRect.origin.y = _chatBgView.frame.size.height - 1;
     line.frame = lineRect;
@@ -2604,10 +3066,11 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
     NSString *class1 = NSStringFromClass([gestureRecognizer class]);
     NSString *class2 = NSStringFromClass([otherGestureRecognizer class]);
-    if ([class1 isEqual:class2]) {
-        return YES;
-    }
-    return NO;
+//    if ([class1 isEqual:class2]) {
+//        return YES;
+//    }
+//    return NO;
+    return YES;
 }
 
 #pragma mark  - ButtonViewDelegate -
@@ -2624,15 +3087,15 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
     UITouch *t = [touches anyObject];
     if ([self.recordType isEqualToString:@"pressRecord"]) {
         CGPoint where = [t locationInView:_recordBtn];
-//        if (where.x<0 || where.x>_recordBtn.bounds.size.width || where.y<0 || where.y>_recordBtn.bounds.size.height) {
-//            [self changeRecordBgNormal];
-//            if (touchEvent != touchMoveOut) {
-//                if (recBtnMoveoutIdcb >= 0) {
-//                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
-//                }
-//            }
-//            touchEvent=touchMoveOut;
-//        } else {
+        if (where.x<0 || where.x>_recordBtn.bounds.size.width || where.y<0 || where.y>_recordBtn.bounds.size.height) {
+            [self changeRecordBgNormal];
+            if (touchEvent != touchMoveOut) {
+                if (recBtnMoveoutIdcb >= 0) {
+                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
+                }
+            }
+            touchEvent=touchMoveOut;
+        } else {
             [self changeRecordBgHighlight];
             if (touchEvent==touchMoveOut) {
                 if (recBtnMoveinIdcb >= 0) {
@@ -2640,18 +3103,18 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
                 }
             }
             touchEvent=touchMoveIn;
-//        }
+        }
     }else{
         CGPoint where = [t locationInView:_recordPanelBtn];
-//        if (where.x<0 || where.x>_recordPanelBtn.bounds.size.width || where.y<0 || where.y>_recordPanelBtn.bounds.size.height) {
-//            [self changeRecordBgNormal];
-//            if (touchEvent != touchMoveOut) {
-//                if (recBtnMoveoutIdcb >= 0) {
-//                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
-//                }
-//            }
-//            touchEvent=touchMoveOut;
-//        } else {
+        if (where.x<0 || where.x>_recordPanelBtn.bounds.size.width || where.y<0 || where.y>_recordPanelBtn.bounds.size.height) {
+            [self changeRecordBgNormal];
+            if (touchEvent != touchMoveOut) {
+                if (recBtnMoveoutIdcb >= 0) {
+                    [self sendResultEventWithCallbackId:recBtnMoveoutIdcb dataDict:nil errDict:nil doDelete:NO];
+                }
+            }
+            touchEvent=touchMoveOut;
+        } else {
             [self changeRecordBgHighlight];
             if (touchEvent==touchMoveOut) {
                 if (recBtnMoveinIdcb >= 0) {
@@ -2659,7 +3122,7 @@ int getUIRowCountWith(float screenWidth ,float sideLength)
                 }
             }
             touchEvent=touchMoveIn;
-//        }
+        }
     }
 
 }
