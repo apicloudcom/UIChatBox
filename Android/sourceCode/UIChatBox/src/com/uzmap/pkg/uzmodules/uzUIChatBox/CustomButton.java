@@ -54,8 +54,7 @@ public class CustomButton extends Button {
 		super(context, attrs);
 	}
 
-	public void init(ViewBackground normalBg, ViewBackground highlightBg,
-			int w, int h, int corner) {
+	public void init(ViewBackground normalBg, ViewBackground highlightBg, int w, int h, int corner) {
 		mNormalBg = normalBg;
 		mHighlightBg = highlightBg;
 		w = UZUtility.dipToPix(w);

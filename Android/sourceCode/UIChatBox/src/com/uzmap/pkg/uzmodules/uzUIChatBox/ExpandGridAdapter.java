@@ -20,6 +20,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class ExpandGridAdapter extends BaseAdapter {
@@ -30,6 +31,8 @@ public class ExpandGridAdapter extends BaseAdapter {
 	private UzUIChatBox mModule;
 	private int mTitleSize;
 	private int mTitleColor;
+	
+	private int mTitleTopMargin;
 
 	/****
 	 * 每一个表情点击的适配器;
@@ -42,7 +45,7 @@ public class ExpandGridAdapter extends BaseAdapter {
 	 */
 	public ExpandGridAdapter(UzUIChatBox module,
 			ArrayList<ExpandData> mExpandData, Context mContext,
-			ViewPager mViewPager, UZModuleContext mModuleContext) {
+			ViewPager mViewPager, UZModuleContext mModuleContext, int titleTopMargin) {
 		this.mModule = module;
 		this.mExpandData = mExpandData;
 		this.mContext = mContext;
@@ -50,6 +53,7 @@ public class ExpandGridAdapter extends BaseAdapter {
 		mJsParamsUtil = JsParamsUtil.getInstance();
 		mTitleSize = mJsParamsUtil.extrasTitleSize(mModuleContext);
 		mTitleColor = mJsParamsUtil.extrasTitleColor(mModuleContext);
+		this.mTitleTopMargin = titleTopMargin;
 	}
 	
 	
@@ -74,12 +78,10 @@ public class ExpandGridAdapter extends BaseAdapter {
 		ViewHolder viewHolder;
 		if (convertView == null) {
 			viewHolder = new ViewHolder();
-			int layoutId = UZResourcesIDFinder
-					.getResLayoutID("mo_uichatbox_expand_girdview_item");
+			int layoutId = UZResourcesIDFinder.getResLayoutID("mo_uichatbox_expand_girdview_item");
 			convertView = View.inflate(mContext, layoutId, null);
 			int item_iconId = UZResourcesIDFinder.getResIdID("item_icon");
-			viewHolder.imageView = (ImageView) convertView
-					.findViewById(item_iconId);
+			viewHolder.imageView = (ImageView) convertView.findViewById(item_iconId);
 			int item_textId = UZResourcesIDFinder.getResIdID("item_text");
 			viewHolder.textView = (TextView) convertView
 					.findViewById(item_textId);
@@ -97,6 +99,10 @@ public class ExpandGridAdapter extends BaseAdapter {
 		viewHolder.textView.setText(expandData.getTitle());
 		viewHolder.textView.setTextSize(mTitleSize);
 		viewHolder.textView.setTextColor(mTitleColor);
+		
+		LinearLayout.LayoutParams titleParams = (LinearLayout.LayoutParams)viewHolder.textView.getLayoutParams();
+		titleParams.topMargin = mTitleTopMargin;
+		
 		viewHolder.imageView.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -113,8 +119,7 @@ public class ExpandGridAdapter extends BaseAdapter {
 		TextView textView;
 	}
 
-	private BitmapDrawable createDrawable(String imgPath,
-			BitmapDrawable defaultValue) {
+	private BitmapDrawable createDrawable(String imgPath, BitmapDrawable defaultValue) {
 		String realPath = mModule.makeRealPath(imgPath);
 		Bitmap bitmap = mJsParamsUtil.getBitmap(realPath);
 		if (bitmap != null) {
@@ -123,8 +128,7 @@ public class ExpandGridAdapter extends BaseAdapter {
 		return defaultValue;
 	}
 
-	private StateListDrawable createStateDrawable(BitmapDrawable nomalDrawable,
-			BitmapDrawable pressDrawable) {
+	private StateListDrawable createStateDrawable(BitmapDrawable nomalDrawable, BitmapDrawable pressDrawable) {
 		StateListDrawable sd = new StateListDrawable();
 		sd.addState(new int[] { android.R.attr.state_pressed }, pressDrawable);
 		sd.addState(new int[] {}, nomalDrawable);

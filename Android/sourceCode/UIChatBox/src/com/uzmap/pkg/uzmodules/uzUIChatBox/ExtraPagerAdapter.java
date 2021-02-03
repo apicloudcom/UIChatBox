@@ -7,6 +7,9 @@
 package com.uzmap.pkg.uzmodules.uzUIChatBox;
 
 import java.util.ArrayList;
+
+import org.json.JSONObject;
+
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
@@ -15,6 +18,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 
 public class ExtraPagerAdapter extends PagerAdapter {
 	private ArrayList<ExpandData> mExpandData;
@@ -23,6 +27,11 @@ public class ExtraPagerAdapter extends PagerAdapter {
 	private ViewPager mViewPager;
 	private UzUIChatBox mModule;
 	private int mBgColor;
+	
+	private int pageItems = 8;
+	
+	private int gridHorizontalPadding;
+	private int titleTopMargin;
 
 	/***
 	 * 轮播器数据;
@@ -43,12 +52,18 @@ public class ExtraPagerAdapter extends PagerAdapter {
 		this.mViewPager = mViewPager;
 		this.mModuleContext = mModuleContext;
 		this.mBgColor = bgColor;
+		
+		JSONObject extraObj = this.mModuleContext.optJSONObject("extras");
+		if(extraObj != null){
+			gridHorizontalPadding = UZUtility.dipToPix(extraObj.optInt("gridHorizontalPadding"));
+			titleTopMargin = UZUtility.dipToPix(extraObj.optInt("titleTopMargin"));
+		}
 	}
 
 	@Override
 	public int getCount() {
-		return (int) Math.ceil((double) mExpandData.size() / (double) 8) == 0 ? 1
-				: (int) Math.ceil((double) mExpandData.size() / (double) 8);
+		return (int) Math.ceil((double) mExpandData.size() / (double) pageItems) == 0 ? 1
+				: (int) Math.ceil((double) mExpandData.size() / (double) pageItems);
 	}
 
 	@Override
@@ -61,19 +76,22 @@ public class ExtraPagerAdapter extends PagerAdapter {
 		int mo_chatbox_gridId = UZResourcesIDFinder
 				.getResLayoutID("mo_uichatbox_expand_grid");
 		View layout = View.inflate(mContext, mo_chatbox_gridId, null);
-		int initialPosition = position * 8;
+		int initialPosition = position * pageItems;
 		ArrayList<ExpandData> imageInPage = new ArrayList<ExpandData>();
-		for (int i = initialPosition; i < initialPosition + 8
+		for (int i = initialPosition; i < initialPosition + pageItems
 				&& i < mExpandData.size(); i++) {
 			imageInPage.add(mExpandData.get(i));
 		}
 		int emoticons_gridId = UZResourcesIDFinder.getResIdID("expand_grid");
 		GridView grid = (GridView) layout.findViewById(emoticons_gridId);
 
-		grid.setPadding(0, UZUtility.dipToPix(20), 0, 0);
+		grid.setPadding(gridHorizontalPadding, UZUtility.dipToPix(20), gridHorizontalPadding, 0);
+		
 		grid.setBackgroundColor(mBgColor);
 		ExpandGridAdapter adapter = new ExpandGridAdapter(mModule, imageInPage,
-				mContext, mViewPager, mModuleContext);
+				mContext, mViewPager, mModuleContext, titleTopMargin);
+		
+		
 
 		grid.setAdapter(adapter);
 		((ViewPager) collection).addView(layout);

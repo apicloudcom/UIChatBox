@@ -72,39 +72,44 @@ public class CenterExtraPagerAdapter extends PagerAdapter {
 
 	public void setData(LinearLayout layout, PageData data, final int position) {
 
-		ExtraData leftData = data.extraDatas.get(0);
-		int left_img_id = UZResourcesIDFinder.getResIdID("leftImg");
-		ImageView leftItemImage = (ImageView) layout.findViewById(left_img_id);
-		leftItemImage.setImageBitmap(UZUtility.getLocalImage(uzContext.makeRealPath(leftData.itemImageUrl)));
-
-		int left_title_id = UZResourcesIDFinder.getResIdID("leftTxt");
-		TextView leftTitleTxt = (TextView) layout.findViewById(left_title_id);
-		leftTitleTxt.setText(leftData.itemText);
-
-		leftItemImage.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				int index = UzUIChatBox.mCurrentPageIndex * 2;
-				callback(index);
-			}
-		});
-
-		ExtraData rightData = data.extraDatas.get(1);
-		int right_img_id = UZResourcesIDFinder.getResIdID("rightImg");
-		ImageView rightItemImage = (ImageView) layout.findViewById(right_img_id);
-		rightItemImage.setImageBitmap(UZUtility.getLocalImage(uzContext.makeRealPath(rightData.itemImageUrl)));
-
-		int right_title_id = UZResourcesIDFinder.getResIdID("rightTxt");
-		TextView rightTitleTxt = (TextView) layout.findViewById(right_title_id);
-		rightTitleTxt.setText(rightData.itemText);
+		if(data.extraDatas.size() > 0){
+				ExtraData leftData = data.extraDatas.get(0);
+				int left_img_id = UZResourcesIDFinder.getResIdID("leftImg");
+				ImageView leftItemImage = (ImageView) layout.findViewById(left_img_id);
+				leftItemImage.setImageBitmap(UZUtility.getLocalImage(uzContext.makeRealPath(leftData.itemImageUrl)));
 		
-		rightItemImage.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				int index = UzUIChatBox.mCurrentPageIndex * 2;
-				callback(index + 1);
-			}
-		});	
+				int left_title_id = UZResourcesIDFinder.getResIdID("leftTxt");
+				TextView leftTitleTxt = (TextView) layout.findViewById(left_title_id);
+				leftTitleTxt.setText(leftData.itemText);
+		
+				leftItemImage.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View arg0) {
+						int index = UzUIChatBox.mCurrentPageIndex * 2;
+						callback(index);
+					}
+				});
+		}
+
+		if(data.extraDatas.size() > 1){
+			ExtraData rightData = data.extraDatas.get(1);
+			int right_img_id = UZResourcesIDFinder.getResIdID("rightImg");
+			ImageView rightItemImage = (ImageView) layout.findViewById(right_img_id);
+			rightItemImage.setImageBitmap(UZUtility.getLocalImage(uzContext.makeRealPath(rightData.itemImageUrl)));
+
+			int right_title_id = UZResourcesIDFinder.getResIdID("rightTxt");
+			TextView rightTitleTxt = (TextView) layout.findViewById(right_title_id);
+			rightTitleTxt.setText(rightData.itemText);
+			
+			rightItemImage.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View arg0) {
+					int index = UzUIChatBox.mCurrentPageIndex * 2;
+					callback(index + 1);
+				}
+			});	
+		}
+		
 	}
 	
 	public static class PageData {

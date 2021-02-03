@@ -20,7 +20,7 @@ public class ExpandData {
 	public String getNomal() {
 		return normal;
 	}
-
+	
 	public void setNomal(String normal) {
 		this.normal = normal;
 	}

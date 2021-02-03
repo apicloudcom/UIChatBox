@@ -9,10 +9,10 @@ package com.uzmap.pkg.uzmodules.uzUIChatBox;
 import android.content.Context;
 import android.os.Handler;
 import android.widget.LinearLayout;
+
 /**
  * 线性布局的子类；
  * @author 邓宝成
- *
  */
 
 public class ChatBoxLayout extends LinearLayout {
@@ -33,7 +33,6 @@ public class ChatBoxLayout extends LinearLayout {
 	public void setAutoFocus(boolean isAutoFocus) {
 		this.isAutoFocus = isAutoFocus;
 	}
-	
 	
 	/**
 	 * 我们要使用View.post()这个方法就必须等onAttachedToWindow ()这个方法执行过了才行

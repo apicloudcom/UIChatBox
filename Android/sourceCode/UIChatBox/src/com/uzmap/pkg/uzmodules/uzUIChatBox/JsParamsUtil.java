@@ -121,13 +121,11 @@ public class JsParamsUtil {
 	}
 
 	public int inputBarTextMarginLeft(UZModuleContext moduleContext) {
-
 		JSONObject stylesObj = moduleContext.optJSONObject("styles");
 		if (stylesObj != null) {
 			JSONObject inputBarObj = stylesObj.optJSONObject("inputBar");
 			if (inputBarObj != null) {
-				return UZUtility.dipToPix(inputBarObj.optInt("textMarginLeft",
-						5));
+				return UZUtility.dipToPix(inputBarObj.optInt("textMarginLeft", 5));
 			}
 		}
 		return UZUtility.dipToPix(5);
@@ -136,8 +134,7 @@ public class JsParamsUtil {
 	// ========= add new feature ==========
 
 	public String getRecordType(UZModuleContext moduleContext) {
-		String recordType = moduleContext
-				.optString("recordType", "pressRecord");
+		String recordType = moduleContext.optString("recordType", "pressRecord");
 		return recordType;
 	}
 
@@ -145,8 +142,7 @@ public class JsParamsUtil {
 		String nnormalImage = null;
 		JSONObject styles = uzContext.optJSONObject("styles");
 		if (styles != null) {
-			JSONObject recordPanelBtnObj = styles
-					.optJSONObject("recordPanelBtn");
+			JSONObject recordPanelBtnObj = styles.optJSONObject("recordPanelBtn");
 			if (recordPanelBtnObj != null) {
 				nnormalImage = recordPanelBtnObj.optString("normalImg");
 				return nnormalImage;
@@ -159,8 +155,7 @@ public class JsParamsUtil {
 		String activeImg = null;
 		JSONObject styles = uzContext.optJSONObject("styles");
 		if (styles != null) {
-			JSONObject recordPanelBtnObj = styles
-					.optJSONObject("recordPanelBtn");
+			JSONObject recordPanelBtnObj = styles.optJSONObject("recordPanelBtn");
 			if (recordPanelBtnObj != null) {
 				activeImg = recordPanelBtnObj.optString("activeImg");
 				return activeImg;
@@ -173,8 +168,7 @@ public class JsParamsUtil {
 		int width = UZUtility.dipToPix(100);
 		JSONObject styles = uzContext.optJSONObject("styles");
 		if (styles != null) {
-			JSONObject recordPanelBtnObj = styles
-					.optJSONObject("recordPanelBtn");
+			JSONObject recordPanelBtnObj = styles.optJSONObject("recordPanelBtn");
 			if (recordPanelBtnObj != null) {
 				width = UZUtility.dipToPix(recordPanelBtnObj.optInt("width"));
 			}

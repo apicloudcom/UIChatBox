@@ -31,7 +31,6 @@ public class ChatBoxEditText extends EditText {
 	private void init() {
 		mPaint = new Paint();
 		mPaint.setStrokeWidth(2);
-		
 	}
 
 	@Override

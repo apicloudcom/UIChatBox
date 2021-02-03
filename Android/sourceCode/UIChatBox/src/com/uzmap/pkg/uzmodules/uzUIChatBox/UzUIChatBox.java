@@ -59,8 +59,8 @@ import com.uzmap.pkg.uzmodules.uzUIChatBox.CenterExtraPagerAdapter.PageData;
 import com.uzmap.pkg.uzmodules.uzUIChatBox.GridAdapter.KeyClickListener;
 import com.uzmap.pkg.uzmodules.uzUIChatBox.ViewBackground.BackgroundType;
 
-public class UzUIChatBox extends UZModule implements OnClickListener,
-		TextWatcher, AnimationListener, KeyClickListener, OnPageChangeListener {
+public class UzUIChatBox extends UZModule implements OnClickListener, TextWatcher, AnimationListener, KeyClickListener, OnPageChangeListener {
+	
 	private static final int NO_OF_EMOTICONS_PER_PAGE = 28;
 	private UZModuleContext mModuleContext;
 	private UZModuleContext mToggleKeyboardCallBack;
@@ -168,7 +168,17 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			mFaceBtn.setEnabled(false);
 			mExstraBtn.setEnabled(false);
 		}
-
+		
+		JSONObject stylesObj = mModuleContext.optJSONObject("styles");
+		if(stylesObj != null){
+			JSONObject inputBarObj = stylesObj.optJSONObject("inputBar");
+			if(inputBarObj != null){
+				String placeholderColor = inputBarObj.optString("placeholderColor");
+				if(!TextUtils.isEmpty(placeholderColor)){
+					mEditText.setHintTextColor(UZUtility.parseCssColor(placeholderColor));
+				}
+			}
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -203,7 +213,6 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	}
 	
 	
-
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void onClean() {
@@ -318,12 +327,10 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				final SpannableString insertMsg = parseMsg(msg);
 				mEditText.setText(insertMsg);
 				mEditText.post(new Runnable(){
-
 					@Override
 					public void run() {
 						mEditText.setSelection(insertMsg.length());
 					}
-					
 				});
 				valueCallBack(moduleContext, getEditTextStr());
 			}
@@ -543,8 +550,15 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 	 */
 	private void setExtraPageNums() {
 		int size = mExtraParams.size();
-		int pageSize = 8;
-		int pageNums = (size + pageSize - 1) / pageSize;
+		int pageSize;
+		int pageNums;
+		if(mIsCenterDisplay){
+			pageSize = 2;
+			pageNums = (size + pageSize - 1) / pageSize;
+		} else {
+			pageSize = 8;
+			pageNums = (size + pageSize - 1) / pageSize;
+		}
 		mExtraViewPager.setOffscreenPageLimit(pageNums);
 		initIndictorView(pageNums);
 	}
@@ -583,7 +597,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			}
 		}
 	}
-
+	
 	private void initFaceViewPager() {
 		setEmotionPageNums();
 		addDeleteEmotionBtn();
@@ -819,7 +833,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				UZUtility.dipToPix(50) * 4 + UZUtility.dipToPix(20));
 
 		params.addRule(RelativeLayout.CENTER_VERTICAL);
-
+		
 		mTableLayout.setLayoutParams(params);
 		mTableLayout.setVisibility(View.GONE);
 		mTableLayout.addView(mFaceViewPager);
@@ -1112,16 +1126,7 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 
 	@SuppressWarnings("deprecation")
 	private void initEditColors() {
-		GradientDrawable gradientDrawable = new GradientDrawable();
-		gradientDrawable.setColor(Constans.INPUT_BOX_BG_COLOR);
-
-		int borderCorner = mJsParamsUtil.inputBoxBorderCorner(mModuleContext);
-		gradientDrawable.setCornerRadius(borderCorner);
-		gradientDrawable.setStroke(UZUtility.dipToPix(1),
-				Constans.INPUT_BOX_BORDER_COLOR);
-
-		// ui
-		mEditText.setBackgroundDrawable(gradientDrawable);
+		setEditTextBg();
 
 		String leftIconPath = mJsParamsUtil
 				.inputBoxLeftIconPath(mModuleContext);
@@ -1131,6 +1136,18 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		if (leftBmp != null) {
 			mEditText.setLeftIcon(leftBmp);
 		}
+	}
+
+	private void setEditTextBg() {
+		GradientDrawable gradientDrawable = new GradientDrawable();
+		gradientDrawable.setColor(Constans.INPUT_BOX_BG_COLOR);
+
+		int borderCorner = mJsParamsUtil.inputBoxBorderCorner(mModuleContext);
+		gradientDrawable.setCornerRadius(borderCorner);
+		gradientDrawable.setStroke(UZUtility.dipToPix(1),Constans.INPUT_BOX_BORDER_COLOR);
+
+		// ui
+		mEditText.setBackgroundDrawable(gradientDrawable);
 	}
 
 	public Bitmap generateBmp(Bitmap sourceBmp, int size) {
@@ -1386,17 +1403,48 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 			// 右侧表情按钮；
 			onFaceBtnClick();
 			clickCallBack("showEmotion");
+			
+			v.postDelayed(new Runnable(){
+				@Override
+				public void run() {
+					checkViewConflict();
+				}
+			}, 300);
+			
 		} else if (v == mExstraBtn) {
 
 			// 额外按钮的点击事件;
 			onExtraBtnClick();
 			clickCallBack("showExtras");
 			// 点击发送的按钮;.
+			
+			v.postDelayed(new Runnable(){
+				@Override
+				public void run() {
+					checkViewConflict();
+				}
+			}, 300);
 
 		} else if (v == mSendBtn && mSendBtn instanceof Button) {
 			onSendBtnClick();
 		}
 	}
+	
+	
+	public void checkViewConflict(){
+		if(mChatBoxLayout.getVisibility() == View.VISIBLE && isSoftShowing()){
+			hideInputMethod(((Activity) context()).getCurrentFocus());
+		}
+	}
+	
+	private boolean isSoftShowing() {
+        //获取当前屏幕内容的高度
+        int screenHeight = ((Activity)context()).getWindow().getDecorView().getHeight();
+        //获取View可见区域的bottom
+        Rect rect = new Rect();
+        ((Activity)context()).getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
+        return screenHeight - rect.bottom != 0;
+    }
 
 	/***
 	 * 发送按钮的点击事件;
@@ -1521,8 +1569,9 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 		isKeyBoardVisible = true;
 		mEditText.requestFocus();
 		mFaceBtn.setBackgroundDrawable(mFaceBtnDrawable);
+		
+		// FIXME: 123
 		mTableLayout.setVisibility(View.GONE);
-
 		resetBtn();
 	}
 
@@ -2314,6 +2363,13 @@ public class UzUIChatBox extends UZModule implements OnClickListener,
 				JSONObject ret = new JSONObject();
 				mRecordCanceledContext.success(ret, false);
 			}
+		}
+	}
+	
+	public void jsmethod_setInputBarBgColor(UZModuleContext uzModuleContext){
+		String color = uzModuleContext.optString("color","#f2f2f2");
+		if (mEditLayout != null) {
+			mEditLayout.setBackgroundColor(UZUtility.parseCssColor(color));
 		}
 	}
 

@@ -19,7 +19,7 @@
 			var obj = api.require('UIChatBox');
 			obj.open({
 			    //输入框占位提示文本；
-				placeholder: '',
+				placeholder: 'haha',
 				//文本显示的行数;
 			    maxRows: 3,
 			    //输入框是否自动获取焦点，并弹出键盘
@@ -51,8 +51,8 @@
 			            borderColor: '#FF0000',
 			            bgColor: '#FFFFFF',
 			            textColor:'#F00',
+			            placeholderColor:'#0F0',
 			            textSize:30
-			           
 			        },
 			        inputBox: {
 			            borderColor: '#FF0000',
@@ -101,17 +101,19 @@
 			            color: '#c4c4c4',
 			            activeColor: '#9e9e9e'
 			        },
-			         recordPanelBtn:{                     //JSON对象；录音面板样式
+			        recordPanelBtn:{                     //JSON对象；录音面板样式
      						normalImg: 'widget://image/chatBox_add1.png',        //（可选项）字符串类型；按钮常态的图片
      						activeImg: 'widget://image/chatBox_album1.png',         //（可选项）字符串类型；按钮按下时的图片
      						width:100,           //（可选项）数字类型；按钮的宽度，默认：100
      						height:100           //（可选项）数字类型；按钮的高度，默认：100
    					}
 			    },
-			     
 			    extras: {
 			        titleSize: 10,
 			        titleColor: '#a3a3a3',
+			        gridHorizontalPadding:10,    // 网格水平内边距；数字类型；默认：0
+    				titleTopMargin:15,            // 标题顶部边距（距离顶部图片）；数字类型；默认：0 
+    				isCenterDisplay:false, 
 			        btns : [{
 						title : '照片',
 						normalImg : 'widget://image/chatBox_album2.png',
@@ -178,8 +180,6 @@
 		//		alert("keyboard"+JSON.stringify(ret));
 		//	});
 		//}
-		
-		
 		
 		function addLis(){
 			var obj = api.require('UIChatBox');
@@ -390,6 +390,13 @@
 					}
 			);
 		}
+		
+		function UIChatBox_setInputBarBgColor(){
+			var obj = api.require('UIChatBox');
+			obj.setInputBarBgColor({
+				color:'#000fff'
+			});
+		}
 	    
 	</script>
 </head>
@@ -421,8 +428,8 @@
             	<input type="button" onclick="valueNull()" value="valueNull" />
             	<input type="button" onclick="valueHH()" value="valueHH" />
             	<input type="button" onclick="valueSpace()" value="valueSpace" />
-            	
             	<input type="button" onclick="closeChat()" value="closeChat" />
+            	<input type="button" onclick="UIChatBox_setInputBarBgColor()" value="setInputBarBgColor" />
             </div>
 		</div>
 	</div>
